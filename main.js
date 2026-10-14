@@ -85,7 +85,7 @@
   // Coordenadas uv de 0 a 1 com y para cima; raios em fração da largura da foto.
   const FACE = {
     src: 'assets/img/hero-face-2048',
-    eyeSrc: 'assets/img/hero-eye-1024',
+    eyeSrc: 'assets/img/hero-eye-2048',
     eye: [0.57705, 0.60582],                         // centro da pupila
     eyeRect: [0.49239, 0.52116, 0.66171, 0.69048],   // área coberta pela textura do olho em alta
     irisR: 0.013426,
@@ -103,64 +103,113 @@ float hash(vec2 p){vec3 p3=fract(vec3(p.xyx)*0.1031);p3+=dot(p3,p3.yzx+33.33);re
 uniform sampler2D uFace;uniform sampler2D uEye;
 uniform vec2 uRes;uniform float uZoom;uniform float uRot;uniform float uLerp;
 uniform float uS;uniform vec2 uP0;uniform vec2 uE;uniform vec4 uEyeRect;
-uniform float uIrisR;uniform float uPupilR;uniform float uDetail;uniform float uDeep;uniform float uFade;uniform float uOct;
+uniform float uIrisR;uniform float uPupilR;uniform float uDetail;uniform float uDeep;uniform float uFade;uniform float uMaxOct;
 const vec3 BG=vec3(0.027,0.043,0.086);
 ${HASH}
 float pnoise(vec2 x,float per){vec2 i=floor(x);vec2 f=fract(x);vec2 u=f*f*(3.0-2.0*f);
   float i0=mod(i.x,per);float i1=mod(i.x+1.0,per);
   return mix(mix(hash(vec2(i0,i.y)),hash(vec2(i1,i.y)),u.x),mix(hash(vec2(i0,i.y+1.0)),hash(vec2(i1,i.y+1.0)),u.x),u.y);}
-float pfbm(vec2 x,float per){float v=0.0;float a=0.5;float n=0.0;
-  for(int k=0;k<6;k++){if(float(k)>=uOct)break;v+=a*pnoise(x,per);n+=a;x*=2.0;x.y+=17.31;per*=2.0;a*=0.5;}
-  return v/n;}
+/* fbm periódico com nível de detalhe contínuo: novas oitavas surgem suavemente com o zoom */
+float pfbm(vec2 x,float per,float oct){float v=0.0;float a=0.5;float n=0.0;
+  for(int k=0;k<8;k++){float w=clamp(oct-float(k),0.0,1.0);if(w<=0.0)break;
+    v+=a*w*pnoise(x,per);n+=a*w;x*=2.0;x.y+=17.31;per*=2.0;a*=0.5;}
+  return n>0.0?v/n:0.5;}
 float inv(float a,float b,float x){return 1.0-smoothstep(a,b,x);}
+
+/* íris castanha fotorrealista, nas cores do olho da Ingrid (q em unidades do raio da íris) */
+vec3 iris(vec2 q,float r,float pr,float lod,float pxq){
+  float u=clamp((r-pr)/(1.0-pr),0.0,1.0);
+  float t=atan(q.y,q.x+0.000001)/6.2831853+0.5;
+  float tw=t+0.010*(pnoise(vec2(t*24.0,u*5.0),24.0)-0.5)+0.004*(pnoise(vec2(t*96.0,u*16.0+2.0),96.0)-0.5);
+  float fib=pfbm(vec2(tw*64.0,u*2.6),64.0,lod);
+  float fine=pfbm(vec2(tw*256.0,u*7.0+5.0),256.0,lod-2.0);
+  float cu=0.30+0.05*(pnoise(vec2(t*12.0,2.0),12.0)-0.5)+0.025*(pnoise(vec2(t*44.0,5.0),44.0)-0.5);
+  vec3 cDark=vec3(0.15,0.08,0.05);
+  vec3 cBrown=vec3(0.40,0.22,0.11);
+  vec3 cAmber=vec3(0.66,0.40,0.17);
+  vec3 cGold=vec3(0.90,0.64,0.32);
+  float pz=1.0-smoothstep(cu-0.03,cu+0.03,u);
+  vec3 col=mix(mix(cDark,cBrown,fib),mix(cBrown*0.8,cAmber,fib),pz*0.85);
+  /* brilho dourado ao redor do colarete e pequenos flocos */
+  float glow=exp(-pow((u-cu-0.06)/0.12,2.0));
+  col=mix(col,cGold*(0.55+0.6*fib),glow*0.45*smoothstep(0.35,0.8,fib));
+  col+=cGold*0.35*pow(fine,5.0)*smoothstep(cu,cu+0.2,u)*inv(0.6,0.85,u);
+  /* fibras finas: luz e sombra */
+  col*=0.78+0.5*fine;
+  /* colarete: a crista em zigue-zague */
+  float ridge=exp(-pow((u-cu)/0.022,2.0));
+  col=mix(col,cAmber*1.15,ridge*0.55*(0.6+0.4*fib));
+  /* criptas de Fuchs com bordas claras */
+  float cr=0.65*pnoise(vec2(tw*30.0,u*3.6+4.0),30.0)+0.35*pnoise(vec2(tw*60.0,u*7.0+9.0),60.0);
+  float zone=smoothstep(cu+0.01,cu+0.08,u)*inv(0.48,0.72,u);
+  col*=1.0-0.48*smoothstep(0.6,0.74,cr)*zone;
+  col+=cAmber*0.16*smoothstep(0.52,0.6,cr)*inv(0.6,0.68,cr)*zone;
+  /* sulcos de contração */
+  float fur=0.0;
+  for(int i=0;i<3;i++){float fi=float(i);
+    float uc=0.6+0.11*fi+0.03*(pnoise(vec2(t*16.0,fi*5.0+1.0),16.0)-0.5);
+    fur+=exp(-pow((u-uc)/0.02,2.0))*smoothstep(0.45,0.72,pnoise(vec2(t*7.0,fi*3.0),7.0));}
+  col*=1.0-0.26*clamp(fur,0.0,1.0)*(0.7+0.6*fib);
+  /* anel limbal */
+  col=mix(col,vec3(0.055,0.032,0.022),smoothstep(0.8,1.0,u));
+  /* franja pupilar */
+  float ruff=0.035+0.02*pnoise(vec2(t*90.0,1.0),90.0);
+  col=mix(col,vec3(0.11,0.045,0.025),inv(0.0,ruff,u)*0.85);
+  /* pupila com borda nítida em qualquer zoom */
+  float pe=pr*(1.0+0.012*(pnoise(vec2(t*36.0,3.0),36.0)-0.5));
+  vec3 pc=vec3(0.006,0.005,0.007)+vec3(0.02,0.012,0.01)*smoothstep(0.0,pe,r);
+  col=mix(col,pc,inv(pe-pxq*1.5,pe+pxq*1.5,r));
+  /* profundidade: a íris é levemente côncava */
+  col*=0.88+0.12*smoothstep(0.0,0.6,u);
+  /* brilho úmido da córnea */
+  col+=vec3(0.05,0.06,0.08)*inv(0.0,0.9,length(q-vec2(-0.25,0.35)));
+  return col;
+}
 
 void main(){
   vec2 p=(gl_FragCoord.xy-0.5*uRes)/uRes.y;
-  vec2 pE=uP0+(uE-0.5)*uS;                 /* pupila na tela com zoom 1 */
-  vec2 T=mix(pE,vec2(0.0),uLerp);          /* para onde a pupila vai durante o mergulho */
+  vec2 pE=uP0+(uE-0.5)*uS;
+  vec2 T=mix(pE,vec2(0.0),uLerp);
   vec2 d=p-T;
   float c=cos(uRot);float s=sin(uRot);
   d=vec2(c*d.x-s*d.y,s*d.x+c*d.y);
   vec2 uv=uE+d/(uS*uZoom);
   float pxuv=1.0/(uS*uZoom*uRes.y);
 
-  /* foto + versão do olho em alta (mesma imagem, mais resolução) */
+  /* foto + o olho em alta resolução */
   vec3 col=texture2D(uFace,uv).rgb;
   vec2 eu=(uv-uEyeRect.xy)/(uEyeRect.zw-uEyeRect.xy);
   vec2 fe=min(eu,1.0-eu);
   float ew=smoothstep(0.0,0.2,min(fe.x,fe.y));
   vec3 ec=texture2D(uEye,clamp(eu,0.0,1.0)).rgb;
   col=mix(col,ec,ew);
+  float lum=dot(ec,vec3(0.299,0.587,0.114));
+  float lumS=dot(texture2D(uEye,clamp(eu,0.0,1.0),1.5).rgb,vec3(0.299,0.587,0.114));
+  float lumH=dot(texture2D(uEye,clamp(eu,0.0,1.0),4.0).rgb,vec3(0.299,0.587,0.114));
 
-  /* detalhe da íris para o zoom profundo: fibras somadas às cores reais da foto */
-  float lum=dot(col,vec3(0.299,0.587,0.114));
+  /* dentro do olho: a íris procedural substitui a foto, mantendo o reflexo real */
   vec2 q=(uv-uE)/uIrisR;
   float r=length(q);
-  if(uDetail>0.001&&r<1.1){
-    float pr=uPupilR/uIrisR;
-    float ui=clamp((r-pr)/(1.0-pr),0.0,1.0);
-    float t=atan(q.y,q.x+0.000001)/6.2831853+0.5;
-    float tw=t+0.012*(pnoise(vec2(t*20.0,ui*6.0),20.0)-0.5);
-    float f1=pfbm(vec2(tw*90.0,ui*3.4),90.0);
-    float f3=pnoise(vec2(tw*380.0,ui*7.0+3.0),380.0);
-    float cr=pnoise(vec2(t*24.0,ui*4.5+11.0),24.0);
-    float vis=inv(0.66,0.8,q.y)*inv(0.4,0.72,lum);
-    float ann=smoothstep(pr-0.02,pr+0.05,r)*inv(0.93,1.03,r)*vis;
-    vec3 det=col*(1.0+(f1-0.5)*1.1+(f3-0.5)*0.4);
-    det*=1.0-0.45*smoothstep(0.62,0.8,cr)*smoothstep(0.15,0.3,ui)*inv(0.6,0.9,ui);
-    det+=vec3(0.16,0.09,0.03)*exp(-pow((ui-0.34)/0.05,2.0))*(0.6+f1);
-    det=mix(det,det*0.5,smoothstep(0.82,1.0,ui));
-    col=mix(col,det,ann*uDetail);
-    float pw=pxuv/uIrisR*1.5;
-    float pm=inv(pr-pw,pr+pw,r)*inv(0.4,0.72,lum);
-    col=mix(col,vec3(0.014,0.011,0.012),pm*uDetail*0.8);
+  if(uDetail>0.001&&r<1.12){
+    float pxq=pxuv/uIrisR;
+    float lod=clamp(log2(6.2831853/(pxq*3.0*64.0))+1.0,1.0,uMaxOct);
+    vec3 ir=iris(q,r,uPupilR/uIrisR,lod,pxq);
+    float lidY=0.6-0.25*q.x*q.x;
+    ir*=1.0-0.55*smoothstep(lidY-0.38,lidY,q.y);
+    /* reflexo real da janela: contorno macio, leve gradiente e halo de brilho */
+    float spec=smoothstep(0.36,0.7,lumS);
+    vec3 specC=mix(vec3(0.78,0.8,0.86),vec3(1.0,0.99,0.97),smoothstep(0.55,0.85,lumS));
+    ir+=vec3(0.18,0.16,0.15)*smoothstep(0.24,0.5,lumH)*(1.0-spec);
+    ir=mix(ir,specC,spec*0.94);
+    float mask=inv(0.985,1.03,r)*inv(lidY-0.05,lidY+0.02,q.y)*ew;
+    col=mix(col,ir,mask*uDetail);
   }
   float rp=length(uv-uE)/uPupilR;
   col=mix(col,vec3(0.008,0.010,0.018),inv(0.5,1.15,rp)*uDeep);
 
-  /* tratamento de cor: leve dessaturação, tom frio e vinheta ao redor do rosto */
+  /* tratamento de cor e vinheta */
   float l2=dot(col,vec3(0.299,0.587,0.114));
-  col=mix(vec3(l2),col,0.9)*vec3(0.96,0.98,1.05);
+  col=mix(vec3(l2),col,0.92)*vec3(0.96,0.98,1.05);
   float vg=inv(0.22,0.72,length((uv-vec2(0.5,0.55))*vec2(1.15,0.95)));
   col*=mix(0.28,1.0,vg);
   vec2 ed=min(uv,1.0-uv);
@@ -224,6 +273,8 @@ void main(){
       this.lookTarget = { x: 0, y: 0 };
       this.lastPointer = -1e9;
       this.nextDrift = 0;
+      this.velBlur = 0;
+      this.velTarget = 0;
       this.last = performance.now();
       this.mobile = mm('(max-width: 767px)') || !finePointer;
       this.images = null;
@@ -243,7 +294,7 @@ void main(){
       this.postProg = this.program(VERT, POST_FRAG);
       if (!this.faceProg || !this.postProg) return false;
 
-      this.uFace = this.locations(this.faceProg, ['uFace', 'uEye', 'uRes', 'uZoom', 'uRot', 'uLerp', 'uS', 'uP0', 'uE', 'uEyeRect', 'uIrisR', 'uPupilR', 'uDetail', 'uDeep', 'uFade', 'uOct']);
+      this.uFace = this.locations(this.faceProg, ['uFace', 'uEye', 'uRes', 'uZoom', 'uRot', 'uLerp', 'uS', 'uP0', 'uE', 'uEyeRect', 'uIrisR', 'uPupilR', 'uDetail', 'uDeep', 'uFade', 'uMaxOct']);
       this.uPost = this.locations(this.postProg, ['uTex', 'uRes', 'uFocus', 'uBlur', 'uTime']);
 
       const buf = gl.createBuffer();
@@ -409,7 +460,7 @@ void main(){
       gl.uniform1f(u.uDetail, eyeState.detail);
       gl.uniform1f(u.uDeep, eyeState.deep);
       gl.uniform1f(u.uFade, eyeState.open);
-      gl.uniform1f(u.uOct, this.mobile ? 3 : 4);
+      gl.uniform1f(u.uMaxOct, this.mobile ? 5.5 : 7.5);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
       if (!this.twoPass) return;
@@ -427,7 +478,9 @@ void main(){
       gl.uniform1i(p.uTex, 0);
       gl.uniform2f(p.uRes, this.W, this.H);
       gl.uniform2f(p.uFocus, tx / L.aspect + 0.5, ty + 0.5);
-      gl.uniform1f(p.uBlur, eyeState.blur);
+      // desfoque de movimento: forte só enquanto a pessoa rola; parado, a íris fica nítida
+      const moving = this.velBlur * 0.55 * clamp((eyeState.zoom - 1.3) / 2, 0, 1);
+      gl.uniform1f(p.uBlur, Math.max(eyeState.blur, moving));
       gl.uniform1f(p.uTime, t);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
@@ -437,6 +490,8 @@ void main(){
       const dt = Math.min(0.1, Math.max(0.001, (now - this.last) / 1000));
       this.last = now;
       this.updateLook(now, dt);
+      this.velBlur += (this.velTarget - this.velBlur) * (1 - Math.exp(-dt * 10));
+      this.velTarget *= Math.exp(-dt * 5);
       if (heroDark() >= 0.999) return; // tela já coberta, nada a desenhar
       this.render(now);
       // qualidade adaptativa: reduz a resolução se o aparelho não acompanhar
@@ -573,32 +628,63 @@ void main(){
   function heroScroll() {
     if (!hasGSAP || reduced) return;
     const zl = { v: 0 }; // zoom em escala logarítmica = velocidade percebida constante
+    const applyZoom = () => { eyeState.zoom = Math.exp(zl.v); };
+    const timeEl = $('.vf__time');
+    const pad = (n) => String(n).padStart(2, '0');
+    let lastTime = '';
+
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: heroEl, start: 'top top', end: 'bottom bottom', scrub: 1, invalidateOnRefresh: true },
+      scrollTrigger: {
+        trigger: heroEl,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          eye.velTarget = Math.max(eye.velTarget, Math.min(1, Math.abs(self.getVelocity()) / 2600));
+          // cronômetro do "REC" avança com a rolagem no trecho final
+          const f = Math.max(0, (self.progress - 0.86) / 0.14) * 4 * 30;
+          const txt = `00:0${Math.floor(f / 30)}:${pad(Math.floor(f % 30))}`;
+          if (timeEl && txt !== lastTime) { timeEl.textContent = txt; lastTime = txt; }
+        },
+      },
     });
 
+    // textos e camadas
     tl.to('.hero__scroll', { autoAlpha: 0, duration: 0.06 }, 0.02)
       .fromTo('.hero__content', { y: 0, autoAlpha: 1, filter: 'blur(0px)' }, { y: () => -window.innerHeight * 0.08, autoAlpha: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power2.in', immediateRender: false }, 0.12)
-      .to('.hero__shade', { opacity: 0.35, duration: 0.4 }, 0.3)
-      .fromTo('.hero__portal', { autoAlpha: 0, scale: 0.7, filter: 'blur(0px)' }, { autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: 0.12, ease: 'power2.out', immediateRender: false }, 0.6)
-      .to('.hero__portal', { autoAlpha: 0, scale: 1.4, filter: 'blur(8px)', duration: 0.1, ease: 'power2.in' }, 0.72)
-      .fromTo(darkEl, { opacity: 0 }, { opacity: 1, duration: 0.13, immediateRender: false }, 0.82)
+      .to('.hero__shade', { opacity: 0.3, duration: 0.2 }, 0.28)
+      // 1) chegando nos olhos
+      .fromTo('.story--1 > span', { autoAlpha: 0, yPercent: 60, filter: 'blur(6px)' }, { autoAlpha: 1, yPercent: 0, filter: 'blur(0px)', duration: 0.06, stagger: 0.02, ease: 'power3.out', immediateRender: false }, 0.36)
+      .to('.story--1 > span', { autoAlpha: 0, yPercent: -40, filter: 'blur(6px)', duration: 0.05, stagger: 0.01, ease: 'power2.in' }, 0.5)
+      // 2) a íris inteira na tela: a câmera desacelera para mostrar os detalhes
+      .fromTo('.story--2 > span', { autoAlpha: 0, yPercent: 60, filter: 'blur(6px)' }, { autoAlpha: 1, yPercent: 0, filter: 'blur(0px)', duration: 0.05, stagger: 0.015, ease: 'power3.out', immediateRender: false }, 0.64)
+      .to('.story--2 > span', { autoAlpha: 0, yPercent: -40, filter: 'blur(6px)', duration: 0.04, stagger: 0.01, ease: 'power2.in' }, 0.76)
+      // 3) dentro da pupila: a escuridão vira o visor de uma câmera gravando
+      .fromTo(darkEl, { opacity: 0 }, { opacity: 1, duration: 0.1, immediateRender: false }, 0.86)
+      .fromTo('.viewfinder', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05, immediateRender: false }, 0.89)
+      .fromTo('.vf__c', { scale: 1.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.05, ease: 'power3.out', immediateRender: false }, 0.89)
+      .fromTo('.vf__focus', { scale: 2.2, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.04, ease: 'power3.out', immediateRender: false }, 0.91)
+      .fromTo('.vf__text', { autoAlpha: 0, y: 30, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.05, ease: 'power3.out', immediateRender: false }, 0.92)
       .set({}, {}, 1);
 
-    // WebGL: do rosto inteiro até dentro da pupila (zoom de ~280x em escala logarítmica)
-    const applyZoom = () => { eyeState.zoom = Math.exp(zl.v); };
+    // câmera: rosto inteiro → olhos → íris (devagar) → pupila
     tl.to(zl, { v: Math.log(2.4), duration: 0.2, ease: 'power1.in', onUpdate: applyZoom }, 0.13)
+      .to(zl, { v: Math.log(20), duration: 0.29, ease: 'sine.inOut', onUpdate: applyZoom }, 0.33)
+      .to(zl, { v: Math.log(70), duration: 0.16, ease: 'none', onUpdate: applyZoom }, 0.62)
+      .to(zl, { v: Math.log(320), duration: 0.1, ease: 'power2.in', onUpdate: applyZoom }, 0.78)
       .to(eyeState, { lerp: 0.45, duration: 0.2, ease: 'power1.in' }, 0.13)
-      .to(zl, { v: Math.log(280), duration: 0.52, ease: 'power1.in', onUpdate: applyZoom }, 0.33)
-      .to(eyeState, { lerp: 1, rot: 0.06, duration: 0.45, ease: 'power2.in' }, 0.33)
-      .to(eyeState, { detail: 1, duration: 0.25 }, 0.5)
-      .to(eyeState, { blur: 1, duration: 0.3, ease: 'power2.in' }, 0.52)
-      .to(eyeState, { deep: 1, duration: 0.1 }, 0.78);
+      .to(eyeState, { lerp: 1, duration: 0.29, ease: 'sine.inOut' }, 0.33)
+      .to(eyeState, { rot: 0.06, duration: 0.55 }, 0.33)
+      .to(eyeState, { detail: 1, duration: 0.1, ease: 'sine.inOut' }, 0.52)
+      .to(eyeState, { blur: 1, duration: 0.1, ease: 'power2.in' }, 0.78)
+      .to(eyeState, { deep: 1, duration: 0.08 }, 0.82);
 
     // sem WebGL: a mesma ideia com a foto em CSS (escala a partir do olho)
     tl.to('.fb-face', { scale: 2.4, duration: 0.2, ease: 'power1.in' }, 0.13)
-      .to('.fb-face', { scale: 60, duration: 0.52, ease: 'power3.in' }, 0.33);
+      .to('.fb-face', { scale: 20, duration: 0.29, ease: 'sine.inOut' }, 0.33)
+      .to('.fb-face', { scale: 90, duration: 0.26, ease: 'power2.in' }, 0.62);
   }
 
   /* ========================================================================

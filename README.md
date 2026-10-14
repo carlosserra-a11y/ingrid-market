@@ -73,8 +73,9 @@ Em `main.js`, preencha `TESTIMONIALS` com depoimentos **reais**. Enquanto a list
 O hero usa a foto real da Ingrid (`IMG_5588`) renderizada em **WebGL** (`FACE_FRAG` no `main.js`):
 
 - `assets/img/hero-face-2048.webp`: recorte quadrado do rosto (2048 px).
-- `assets/img/hero-eye-1024.webp`: o olho em resolução máxima, usado durante o zoom.
-- No zoom profundo (até ~280×), o shader acrescenta fibras de íris procedurais **por cima das cores reais** do olho, para não ficar borrado, e escurece a pupila no final.
+- `assets/img/hero-eye-2048.webp`: o olho em alta, usado na aproximação.
+- Dentro do olho (zoom de ~8× a 320×), a foto dá lugar a uma **íris procedural fotorrealista** nas cores do olho da Ingrid: fibras, colarete, criptas, sulcos de contração, anel limbal e pupila de borda nítida. Os detalhes se multiplicam conforme o zoom (nível de detalhe contínuo), então ela fica nítida em qualquer tela. O reflexo de luz real da foto é mantido por cima. A paleta fica na função `iris()` do shader.
+- O desfoque de movimento acompanha a velocidade da rolagem: quando a pessoa para, a íris fica nítida.
 
 Para trocar a foto, gere as duas texturas a partir do novo retrato e recalibre o objeto `FACE` no topo da seção do hero em `main.js`:
 
@@ -83,6 +84,11 @@ Para trocar a foto, gere as duas texturas a partir do novo retrato e recalibre o
 - `irisR` / `pupilR`: raios da íris e da pupila, em fração da largura da foto.
 
 O enquadramento (rosto à direita no desktop, no alto no celular) fica na função `layout()` da classe `Portrait`. O ritmo do mergulho fica em `heroScroll()`, onde cada etapa tem uma posição na linha do tempo de 0 a 1. A altura do hero fica no CSS: `.hero { height: 300svh }` (220svh no celular).
+
+**Roteiro do mergulho** (em `index.html`, `.hero__story` e `.viewfinder`):
+1. Nos olhos: *"Antes de qualquer câmera, existe um olhar."*
+2. Na íris, onde a câmera desacelera: *"É nos detalhes que o público para."*
+3. Dentro da pupila, a escuridão vira o visor de uma câmera gravando (REC, cronômetro e foco): *"Do meu olhar para o seu feed."*
 
 Sem WebGL, entra a mesma foto em CSS (`.fb-face`), com zoom a partir do olho. Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
 

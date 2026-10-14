@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap">
   <link rel="stylesheet" href="style.css">
   <link rel="preload" as="image" href="assets/img/hero-face-2048.webp" type="image/webp" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/img/hero-eye-1024.webp" type="image/webp">
+  <link rel="preload" as="image" href="assets/img/hero-eye-2048.webp" type="image/webp">
 
   <script>
     // Marca que o JS está ativo e garante que o loader nunca fique preso na tela.
@@ -141,9 +141,26 @@
           </div>
         </div>
 
-        <p class="hero__portal" aria-hidden="true">Bem-vindo ao <em>outro lado</em> da tela <span>✦</span></p>
+        <div class="hero__story container" aria-hidden="true">
+          <p class="story story--1">
+            <span class="story__kicker">✦ Antes de qualquer câmera,</span>
+            <span class="story__big">existe um <em>olhar</em>.</span>
+          </p>
+          <p class="story story--2">
+            <span class="story__big">É nos <em>detalhes</em></span>
+            <span class="story__big">que o público para.</span>
+          </p>
+        </div>
         <div class="hero__scroll" aria-hidden="true"><span>Role para entrar</span><i></i></div>
         <div class="hero__dark" aria-hidden="true"></div>
+        <div class="viewfinder" aria-hidden="true">
+          <span class="vf__c vf__c--tl"></span><span class="vf__c vf__c--tr"></span>
+          <span class="vf__c vf__c--bl"></span><span class="vf__c vf__c--br"></span>
+          <span class="vf__rec"><i></i>REC <b class="vf__time">00:00:00</b></span>
+          <span class="vf__meta">9:16 · 4K · 60 FPS</span>
+          <span class="vf__focus"></span>
+          <p class="vf__text">Do meu olhar<br>para o <em>seu feed</em>.</p>
+        </div>
       </div>
     </section>
 
