@@ -27,11 +27,13 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap">
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" as="image" href="assets/img/hero-face-2048.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/img/hero-eye-1024.webp" type="image/webp">
 
   <script>
     // Marca que o JS está ativo e garante que o loader nunca fique preso na tela.
     document.documentElement.classList.replace('no-js', 'js');
-    setTimeout(function () { document.documentElement.classList.add('is-loaded'); }, 4000);
+    setTimeout(function () { document.documentElement.classList.add('is-loaded'); }, 6500);
   </script>
 
   <script type="application/ld+json">
@@ -119,7 +121,7 @@
       <div class="hero__stage">
         <canvas class="hero__canvas" aria-hidden="true"></canvas>
         <div class="hero__fallback" aria-hidden="true">
-          <div class="fb-eye"><div class="fb-iris"><div class="fb-pupil"></div></div></div>
+          <img class="fb-face" src="assets/img/hero-face-2048.webp" alt="" width="2048" height="2048" decoding="async">
         </div>
         <div class="hero__shade" aria-hidden="true"></div>
 
@@ -219,14 +221,14 @@
       <div class="marquee" aria-hidden="true">
         <div class="marquee__track">
           <div class="marquee__group">
-            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
+            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Gastronomia</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
           </div>
           <div class="marquee__group">
-            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
+            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Gastronomia</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
           </div>
         </div>
       </div>
-      <p class="sr-only">Marcas atendidas: Cloud Tech, Dimas Omoda Jaecoo e Dra. Elizabeth Mello, nos segmentos de tecnologia, automotivo, saúde e eventos.</p>
+      <p class="sr-only">Marcas atendidas: Cloud Tech, Dimas Omoda Jaecoo e Dra. Elizabeth Mello, nos segmentos de tecnologia, automotivo, saúde, gastronomia e eventos.</p>
     </section>
 
     <!-- ============ PORTFÓLIO ============ -->
@@ -275,7 +277,18 @@
             <div class="reel__meta"><span class="chip">Evento</span><h3>Jaecoo 5 · 80's Night</h3><p>Dimas Omoda Jaecoo</p></div>
           </li>
           <li class="reel">
-            <button class="reel__phone" type="button" data-reel="3" data-cursor="play" aria-label="Assistir com som: Implantes, para Dra. Elizabeth Mello">
+            <button class="reel__phone" type="button" data-reel="3" data-cursor="play" aria-label="Assistir com som: Mesa posta, bastidores do chef em um evento">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/gastronomia-mesa-posta.webp" width="720" height="1280">
+                <source src="assets/videos/gastronomia-mesa-posta.mp4" type="video/mp4">
+                <source src="assets/videos/gastronomia-mesa-posta.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Gastronomia</span><h3>Mesa posta · bastidores</h3><p>Chef em evento</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="4" data-cursor="play" aria-label="Assistir com som: Implantes, para Dra. Elizabeth Mello">
               <video muted playsinline loop preload="none" poster="assets/img/posters/dra-elizabeth-implantes.webp" width="720" height="1280">
                 <source src="assets/videos/dra-elizabeth-implantes.mp4" type="video/mp4">
                 <source src="assets/videos/dra-elizabeth-implantes.webm" type="video/webm">
@@ -286,7 +299,7 @@
             <div class="reel__meta"><span class="chip">Saúde</span><h3>Implantes · autoridade</h3><p>Dra. Elizabeth Mello</p></div>
           </li>
           <li class="reel">
-            <button class="reel__phone" type="button" data-reel="4" data-cursor="play" aria-label="Assistir com som: Seminovos, para Cloud Tech">
+            <button class="reel__phone" type="button" data-reel="5" data-cursor="play" aria-label="Assistir com som: Seminovos, para Cloud Tech">
               <video muted playsinline loop preload="none" poster="assets/img/posters/cloudtech-seminovos.webp" width="720" height="1280">
                 <source src="assets/videos/cloudtech-seminovos.mp4" type="video/mp4">
                 <source src="assets/videos/cloudtech-seminovos.webm" type="video/webm">
@@ -297,7 +310,7 @@
             <div class="reel__meta"><span class="chip">Varejo</span><h3>Seminovos lacrados</h3><p>Cloud Tech</p></div>
           </li>
           <li class="reel">
-            <button class="reel__phone" type="button" data-reel="5" data-cursor="play" aria-label="Assistir com som: Super Hybrid, tour pelo interior, para Dimas Omoda Jaecoo">
+            <button class="reel__phone" type="button" data-reel="6" data-cursor="play" aria-label="Assistir com som: Super Hybrid, tour pelo interior, para Dimas Omoda Jaecoo">
               <video muted playsinline loop preload="none" poster="assets/img/posters/tour-interior.webp" width="720" height="1280">
                 <source src="assets/videos/tour-interior.mp4" type="video/mp4">
                 <source src="assets/videos/tour-interior.webm" type="video/webm">
@@ -308,7 +321,7 @@
             <div class="reel__meta"><span class="chip">Automotivo</span><h3>Super Hybrid · tour</h3><p>Dimas Omoda Jaecoo</p></div>
           </li>
           <li class="reel">
-            <button class="reel__phone" type="button" data-reel="6" data-cursor="play" aria-label="Assistir com som: Smartphone em destaque, para Cloud Tech">
+            <button class="reel__phone" type="button" data-reel="7" data-cursor="play" aria-label="Assistir com som: Smartphone em destaque, para Cloud Tech">
               <video muted playsinline loop preload="none" poster="assets/img/posters/cloudtech-smartphone.webp" width="720" height="1280">
                 <source src="assets/videos/cloudtech-smartphone.mp4" type="video/mp4">
                 <source src="assets/videos/cloudtech-smartphone.webm" type="video/webm">
@@ -319,7 +332,7 @@
             <div class="reel__meta"><span class="chip">Tecnologia</span><h3>Smartphone em destaque</h3><p>Cloud Tech</p></div>
           </li>
           <li class="reel">
-            <button class="reel__phone" type="button" data-reel="7" data-cursor="play" aria-label="Assistir com som: Prótese dentária, para Dra. Elizabeth Mello">
+            <button class="reel__phone" type="button" data-reel="8" data-cursor="play" aria-label="Assistir com som: Prótese dentária, para Dra. Elizabeth Mello">
               <video muted playsinline loop preload="none" poster="assets/img/posters/dra-elizabeth-protese.webp" width="720" height="1280">
                 <source src="assets/videos/dra-elizabeth-protese.mp4" type="video/mp4">
                 <source src="assets/videos/dra-elizabeth-protese.webm" type="video/webm">

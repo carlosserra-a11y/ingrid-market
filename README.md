@@ -2,7 +2,7 @@
 
 Landing page da **Ingrid Lima**, vídeomaker mobile, social media e tráfego pago ([@ingridlimadomkt](https://www.instagram.com/ingridlimadomkt/)).
 
-Página única, estática, com animações ligadas à rolagem. O destaque é o hero: um olho em macro no fundo da página, e a câmera mergulha na íris até entrar na pupila conforme a pessoa rola.
+Página única, estática, com animações ligadas à rolagem. O destaque é o hero: o rosto real da Ingrid ocupa o fundo da página e, conforme a pessoa rola, a câmera mergulha no olho dela até entrar na pupila.
 
 ## Estrutura
 
@@ -69,15 +69,22 @@ Os vídeos só carregam quando aparecem na tela (`preload="none"`). No máximo 2
 ### Depoimentos
 Em `main.js`, preencha `TESTIMONIALS` com depoimentos **reais**. Enquanto a lista estiver vazia, a seção fica oculta.
 
-### O olho do hero
-O olho é desenhado em **WebGL, direto no código** (`EYE_FRAG` no `main.js`), e não a partir de uma foto. Por isso fica nítido mesmo com zoom de 10× e não pesa nada para baixar. Para ajustar:
+### O rosto e o olho do hero
+O hero usa a foto real da Ingrid (`IMG_5588`) renderizada em **WebGL** (`FACE_FRAG` no `main.js`):
 
-- **Cores da íris:** constantes `BLUE`, `BLUE_D`, `GOLD`, `CHAMP` no shader (valores RGB de 0 a 1).
-- **Posição e tamanho (calibrar a pupila):** função `layout()` da classe `Eye`. `scale` é o tamanho do olho, e `cx`/`cy` a posição do centro em unidades da altura da tela (positivo = direita/cima).
-- **Ritmo do mergulho:** função `heroScroll()`. Cada etapa tem a posição na linha do tempo (0 a 1 = toda a altura do hero). A altura do hero fica no CSS: `.hero { height: 300svh }` (220svh no celular).
-- O reflexo retangular na córnea é a "tela do celular". Fica no bloco "reflexos na córnea".
+- `assets/img/hero-face-2048.webp`: recorte quadrado do rosto (2048 px).
+- `assets/img/hero-eye-1024.webp`: o olho em resolução máxima, usado durante o zoom.
+- No zoom profundo (até ~280×), o shader acrescenta fibras de íris procedurais **por cima das cores reais** do olho, para não ficar borrado, e escurece a pupila no final.
 
-Sem WebGL, entra um olho em CSS com o mesmo zoom. Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
+Para trocar a foto, gere as duas texturas a partir do novo retrato e recalibre o objeto `FACE` no topo da seção do hero em `main.js`:
+
+- `eye`: centro da pupila (uv de 0 a 1, com y para cima);
+- `eyeRect`: área coberta pela textura do olho;
+- `irisR` / `pupilR`: raios da íris e da pupila, em fração da largura da foto.
+
+O enquadramento (rosto à direita no desktop, no alto no celular) fica na função `layout()` da classe `Portrait`. O ritmo do mergulho fica em `heroScroll()`, onde cada etapa tem uma posição na linha do tempo de 0 a 1. A altura do hero fica no CSS: `.hero { height: 300svh }` (220svh no celular).
+
+Sem WebGL, entra a mesma foto em CSS (`.fb-face`), com zoom a partir do olho. Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
 
 ## Qualidade
 
@@ -88,6 +95,7 @@ Sem WebGL, entra um olho em CSS com o mesmo zoom. Com `prefers-reduced-motion`, 
 ## Pendências para confirmar
 
 - [ ] **[CONFIRMAR]** Autorização para citar **Cloud Tech**, **Dimas Omoda Jaecoo** e **Dra. Elizabeth Mello** (faixa de marcas e legendas do portfólio).
+- [ ] **[CONFIRMAR]** Nome do cliente do vídeo de gastronomia (*Mesa posta · bastidores*). Hoje a legenda diz "Chef em evento".
 - [ ] **[CONFIRMAR]** Cidade e região de atendimento presencial. Hoje o texto diz "Santa Catarina" (Sobre e FAQ).
 - [ ] **[CONFIRMAR]** Respostas do FAQ (prazo, tráfego pago, preço) no tom da Ingrid.
 - [ ] **[PREENCHER]** Depoimentos reais em `TESTIMONIALS`.

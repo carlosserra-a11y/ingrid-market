@@ -79,27 +79,33 @@
   }
 
   /* ========================================================================
-     OLHO EM WEBGL
+     HERO EM WEBGL: o rosto real da Ingrid e o mergulho no olho
      ======================================================================== */
-  const eyeState = { zoom: 1, rot: 0, blur: 0, lerp: 0, dilate: 0, open: reduced || !hasGSAP ? 1 : 0 };
+  // Calibração do olho na foto hero-face-2048 (recorte quadrado do IMG_5588).
+  // Coordenadas uv de 0 a 1 com y para cima; raios em fração da largura da foto.
+  const FACE = {
+    src: 'assets/img/hero-face-2048',
+    eyeSrc: 'assets/img/hero-eye-1024',
+    eye: [0.57705, 0.60582],                         // centro da pupila
+    eyeRect: [0.49239, 0.52116, 0.66171, 0.69048],   // área coberta pela textura do olho em alta
+    irisR: 0.013426,
+    pupilR: 0.004795,
+  };
+
+  const eyeState = { zoom: 1, rot: 0, blur: 0, lerp: 0, detail: 0, deep: 0, open: reduced || !hasGSAP ? 1 : 0 };
 
   const VERT = 'attribute vec2 aPos;void main(){gl_Position=vec4(aPos,0.0,1.0);}';
 
   const HASH = `
 float hash(vec2 p){vec3 p3=fract(vec3(p.xyx)*0.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}`;
 
-  const EYE_FRAG = `precision highp float;
-uniform vec2 uRes;uniform float uTime;uniform float uZoom;uniform float uOpen;uniform float uRot;
-uniform float uScale;uniform float uLerp;uniform float uDilate;uniform float uOct;
-uniform vec2 uLook;uniform vec2 uCenter;
+  const FACE_FRAG = `precision highp float;
+uniform sampler2D uFace;uniform sampler2D uEye;
+uniform vec2 uRes;uniform float uZoom;uniform float uRot;uniform float uLerp;
+uniform float uS;uniform vec2 uP0;uniform vec2 uE;uniform vec4 uEyeRect;
+uniform float uIrisR;uniform float uPupilR;uniform float uDetail;uniform float uDeep;uniform float uFade;uniform float uOct;
 const vec3 BG=vec3(0.027,0.043,0.086);
-const vec3 BLUE=vec3(0.20,0.36,1.00);
-const vec3 BLUE_D=vec3(0.04,0.08,0.34);
-const vec3 GOLD=vec3(0.80,0.55,0.28);
-const vec3 CHAMP=vec3(0.93,0.80,0.66);
 ${HASH}
-float noise(vec2 x){vec2 i=floor(x);vec2 f=fract(x);vec2 u=f*f*(3.0-2.0*f);
-  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),u.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),u.x),u.y);}
 float pnoise(vec2 x,float per){vec2 i=floor(x);vec2 f=fract(x);vec2 u=f*f*(3.0-2.0*f);
   float i0=mod(i.x,per);float i1=mod(i.x+1.0,per);
   return mix(mix(hash(vec2(i0,i.y)),hash(vec2(i1,i.y)),u.x),mix(hash(vec2(i0,i.y+1.0)),hash(vec2(i1,i.y+1.0)),u.x),u.y);}
@@ -108,110 +114,59 @@ float pfbm(vec2 x,float per){float v=0.0;float a=0.5;float n=0.0;
   return v/n;}
 float inv(float a,float b,float x){return 1.0-smoothstep(a,b,x);}
 
-vec3 shade(vec2 e,float px){
-  float x=e.x;
-  float ax=clamp(1.0-x*x,0.0,1.0);
-  float top=mix(-0.02,0.50*pow(ax,0.72)+0.03*x,uOpen);
-  float bot=mix(-0.03,-0.38*pow(ax,0.95)+0.02*x,uOpen);
-  float dTop=top-e.y;
-  float dBot=e.y-bot;
-  float edge=min(dTop,dBot);
-  float inside=smoothstep(-px,px,edge)*smoothstep(0.0,0.03,ax);
-
-  /* pele / fundo com brilho de contorno */
-  float od=max(-edge,0.0);
-  float near=inv(0.55,1.35,abs(x));
-  float rim=exp(-od*16.0)*near;
-  vec3 outside=BG;
-  outside+=vec3(0.05,0.05,0.11)*exp(-length(e*vec2(0.65,1.3))*1.6);
-  outside+=vec3(0.16,0.24,0.85)*rim*0.42;
-  outside+=vec3(0.55,0.40,0.75)*pow(rim,3.0)*0.18;
-  float d=e.y-top;
-  if(d>0.0&&d<0.2){
-    float lean=sign(x)*d*(0.4+1.4*abs(x));
-    float s=(x-lean)*46.0;
-    float id=floor(s);
-    float fr=fract(s)-0.5;
-    float len=(0.05+0.08*hash(vec2(id,7.0)))*inv(0.3,1.02,abs(x))*uOpen;
-    float th=0.22*(1.0-d/max(len,0.0001));
-    float lash=inv(th,th+0.08,abs(fr))*step(d,len);
-    float base=inv(0.0,0.03,d)*inv(0.7,1.0,abs(x))*uOpen;
-    outside=mix(outside,vec3(0.006,0.008,0.016),clamp(lash+base,0.0,1.0)*0.95);
-  }
-
-  /* globo ocular */
-  vec2 ic=uLook*vec2(0.16,0.07);
-  float R=0.43;
-  vec2 q=e-ic;
-  float rr=length(q)/R;
-  vec2 se=e*vec2(0.95,1.75);
-  float sph=1.0-0.55*dot(se,se);
-  vec3 col=vec3(0.70,0.71,0.77)*clamp(sph,0.18,1.0)+vec3(0.015,0.025,0.07);
-  float vn=abs(noise(e*9.0+4.0)-0.5);
-  float vein=inv(0.0,0.03,vn)*smoothstep(0.45,0.95,abs(x));
-  col=mix(col,vec3(0.62,0.25,0.28),vein*0.35);
-
-  if(rr<1.1){
-    float pr=0.30+0.02*sin(uTime*0.8)+0.2*uDilate;
-    float u=clamp((rr-pr)/(1.0-pr),0.0,1.0);
-    float t=atan(q.y,q.x+0.000001)/6.2831853+0.5;
-    float tw=t+0.012*(pnoise(vec2(t*20.0,u*6.0),20.0)-0.5);
-    float f1=pfbm(vec2(tw*96.0,u*3.4),96.0);
-    float f2=pnoise(vec2(tw*210.0,u*2.6+7.0),210.0);
-    float f3=uOct>3.5?pnoise(vec2(tw*420.0,u*7.0+3.0),420.0):0.5;
-    float cr=pnoise(vec2(t*26.0,u*4.5+11.0),26.0);
-    float cu=0.34+0.08*(pnoise(vec2(t*14.0,3.0),14.0)-0.5);
-    vec3 inner=mix(GOLD,CHAMP,f1);
-    vec3 outer=mix(BLUE_D,BLUE,smoothstep(0.25,0.85,f1));
-    float m=smoothstep(cu-0.05,cu+0.14,u+(f1-0.5)*0.2);
-    vec3 ir=mix(inner,outer,m);
-    ir*=0.45+0.85*f1+0.3*(f3-0.5);
-    ir+=vec3(0.40,0.62,1.0)*pow(f2,4.0)*0.6*m;
-    ir*=1.0-0.55*smoothstep(0.6,0.78,cr)*smoothstep(0.18,0.32,u)*inv(0.6,0.92,u);
-    ir+=GOLD*0.3*exp(-pow((u-cu)/0.03,2.0));
-    ir*=1.0-0.22*smoothstep(0.6,1.0,u)*(0.5+0.5*sin(u*70.0+f1*6.0));
-    ir=mix(ir,vec3(0.015,0.025,0.08),smoothstep(0.78,1.0,u));
-    float pe=pr+0.015*(pnoise(vec2(t*40.0,1.0),40.0)-0.5);
-    float pxr=px/R;
-    ir=mix(ir,vec3(0.30,0.15,0.08),inv(pe,pe+0.05,rr)*0.45);
-    vec3 pc=vec3(0.004,0.006,0.014)+vec3(0.03,0.05,0.12)*inv(0.0,pe,rr)*0.25;
-    ir=mix(ir,pc,inv(pe-pxr*1.5,pe+pxr*1.5,rr));
-    float limbus=inv(0.975,1.025+pxr,rr);
-    col=mix(col,ir,limbus);
-  }
-
-  float shTop=smoothstep(0.0,0.17,dTop);
-  float shBot=smoothstep(0.0,0.05,dBot);
-  col*=mix(0.22,1.0,shTop)*mix(0.55,1.0,shBot);
-
-  /* reflexos na córnea: a "tela do celular" e um ponto de luz */
-  vec2 rp=e-(ic*0.7+vec2(-0.15,0.13));
-  float ca=cos(0.24);float sa=sin(0.24);
-  rp=vec2(ca*rp.x+sa*rp.y,-sa*rp.x+ca*rp.y);
-  vec2 hs=vec2(0.046,0.082);
-  vec2 qd=abs(rp)-hs+0.018;
-  float rb=length(max(qd,0.0))+min(max(qd.x,qd.y),0.0)-0.018;
-  float phone=inv(-px*1.5,px*1.5,rb);
-  float bars=step(0.55,fract((rp.y+hs.y)*26.0))*step(abs(rp.x),hs.x*0.65)*step(abs(rp.y),hs.y*0.8);
-  col=mix(col,vec3(0.90,0.93,1.0),phone*(0.78-0.18*bars));
-  float spot=inv(0.0,0.022,length(e-(ic*0.7+vec2(0.17,-0.1))));
-  col+=vec3(0.85)*spot*0.6;
-  col+=vec3(0.35,0.45,0.9)*0.07*inv(0.0,0.6,length(q-vec2(-0.1,0.12)));
-
-  return mix(outside,col,inside);
-}
-
 void main(){
   vec2 p=(gl_FragCoord.xy-0.5*uRes)/uRes.y;
-  vec2 ic=uLook*vec2(0.16,0.07);
-  vec2 fp=uCenter+ic*uScale;
-  vec2 target=mix(fp,vec2(0.0),uLerp);
-  vec2 d=p-target;
+  vec2 pE=uP0+(uE-0.5)*uS;                 /* pupila na tela com zoom 1 */
+  vec2 T=mix(pE,vec2(0.0),uLerp);          /* para onde a pupila vai durante o mergulho */
+  vec2 d=p-T;
   float c=cos(uRot);float s=sin(uRot);
   d=vec2(c*d.x-s*d.y,s*d.x+c*d.y);
-  vec2 e=(fp+d/uZoom-uCenter)/uScale;
-  float px=1.0/(uRes.y*uScale*uZoom);
-  gl_FragColor=vec4(shade(e,px),1.0);
+  vec2 uv=uE+d/(uS*uZoom);
+  float pxuv=1.0/(uS*uZoom*uRes.y);
+
+  /* foto + versão do olho em alta (mesma imagem, mais resolução) */
+  vec3 col=texture2D(uFace,uv).rgb;
+  vec2 eu=(uv-uEyeRect.xy)/(uEyeRect.zw-uEyeRect.xy);
+  vec2 fe=min(eu,1.0-eu);
+  float ew=smoothstep(0.0,0.2,min(fe.x,fe.y));
+  vec3 ec=texture2D(uEye,clamp(eu,0.0,1.0)).rgb;
+  col=mix(col,ec,ew);
+
+  /* detalhe da íris para o zoom profundo: fibras somadas às cores reais da foto */
+  float lum=dot(col,vec3(0.299,0.587,0.114));
+  vec2 q=(uv-uE)/uIrisR;
+  float r=length(q);
+  if(uDetail>0.001&&r<1.1){
+    float pr=uPupilR/uIrisR;
+    float ui=clamp((r-pr)/(1.0-pr),0.0,1.0);
+    float t=atan(q.y,q.x+0.000001)/6.2831853+0.5;
+    float tw=t+0.012*(pnoise(vec2(t*20.0,ui*6.0),20.0)-0.5);
+    float f1=pfbm(vec2(tw*90.0,ui*3.4),90.0);
+    float f3=pnoise(vec2(tw*380.0,ui*7.0+3.0),380.0);
+    float cr=pnoise(vec2(t*24.0,ui*4.5+11.0),24.0);
+    float vis=inv(0.66,0.8,q.y)*inv(0.4,0.72,lum);
+    float ann=smoothstep(pr-0.02,pr+0.05,r)*inv(0.93,1.03,r)*vis;
+    vec3 det=col*(1.0+(f1-0.5)*1.1+(f3-0.5)*0.4);
+    det*=1.0-0.45*smoothstep(0.62,0.8,cr)*smoothstep(0.15,0.3,ui)*inv(0.6,0.9,ui);
+    det+=vec3(0.16,0.09,0.03)*exp(-pow((ui-0.34)/0.05,2.0))*(0.6+f1);
+    det=mix(det,det*0.5,smoothstep(0.82,1.0,ui));
+    col=mix(col,det,ann*uDetail);
+    float pw=pxuv/uIrisR*1.5;
+    float pm=inv(pr-pw,pr+pw,r)*inv(0.4,0.72,lum);
+    col=mix(col,vec3(0.014,0.011,0.012),pm*uDetail*0.8);
+  }
+  float rp=length(uv-uE)/uPupilR;
+  col=mix(col,vec3(0.008,0.010,0.018),inv(0.5,1.15,rp)*uDeep);
+
+  /* tratamento de cor: leve dessaturação, tom frio e vinheta ao redor do rosto */
+  float l2=dot(col,vec3(0.299,0.587,0.114));
+  col=mix(vec3(l2),col,0.9)*vec3(0.96,0.98,1.05);
+  float vg=inv(0.22,0.72,length((uv-vec2(0.5,0.55))*vec2(1.15,0.95)));
+  col*=mix(0.28,1.0,vg);
+  vec2 ed=min(uv,1.0-uv);
+  float edge=smoothstep(0.0,0.16,ed.x)*smoothstep(0.0,0.1,ed.y);
+  col=mix(BG,col,edge*uFade);
+  gl_FragColor=vec4(col,1.0);
 }`;
 
   const POST_FRAG = `precision highp float;
@@ -239,15 +194,27 @@ void main(){
     col=acc/tot;
   }
   vec2 vc=(uv-0.5)*vec2(uRes.x/uRes.y,1.0);
-  col*=1.0-0.35*smoothstep(0.35,1.1,length(vc));
+  col*=1.0-0.3*smoothstep(0.45,1.15,length(vc));
   col+=(hash(gl_FragCoord.xy+fract(uTime*7.0)*311.0)-0.5)*0.03;
   gl_FragColor=vec4(col,1.0);
 }`;
 
-  class Eye {
+  const loadImage = (base) => new Promise((resolve, reject) => {
+    const attempt = (exts) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => (exts.length > 1 ? attempt(exts.slice(1)) : reject(new Error(`Falha ao carregar ${base}`)));
+      img.src = `${base}.${exts[0]}`;
+    };
+    attempt(['webp', 'jpg']);
+  });
+
+  class Portrait {
     constructor(canvas) {
       this.canvas = canvas;
       this.ok = false;
+      this.texturesReady = false;
       this.running = false;
       this.visible = true;
       this.quality = 1;
@@ -256,11 +223,10 @@ void main(){
       this.look = { x: 0, y: 0 };
       this.lookTarget = { x: 0, y: 0 };
       this.lastPointer = -1e9;
-      this.nextSaccade = 0;
-      this.nextBlink = performance.now() + 3500;
-      this.blinkStart = -1;
+      this.nextDrift = 0;
       this.last = performance.now();
       this.mobile = mm('(max-width: 767px)') || !finePointer;
+      this.images = null;
       this.loop = this.loop.bind(this);
     }
 
@@ -270,14 +236,14 @@ void main(){
       try { gl = this.canvas.getContext('webgl', opts) || this.canvas.getContext('experimental-webgl', opts); } catch (e) { gl = null; }
       if (!gl) return false;
       const hp = gl.getShaderPrecisionFormat && gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-      if (!hp || hp.precision <= 0) return false;
+      if (!hp || hp.precision <= 0 || gl.getParameter(gl.MAX_TEXTURE_SIZE) < 2048) return false;
       this.gl = gl;
 
-      this.eyeProg = this.program(VERT, EYE_FRAG);
+      this.faceProg = this.program(VERT, FACE_FRAG);
       this.postProg = this.program(VERT, POST_FRAG);
-      if (!this.eyeProg || !this.postProg) return false;
+      if (!this.faceProg || !this.postProg) return false;
 
-      this.uEye = this.locations(this.eyeProg, ['uRes', 'uTime', 'uZoom', 'uOpen', 'uRot', 'uScale', 'uLerp', 'uDilate', 'uOct', 'uLook', 'uCenter']);
+      this.uFace = this.locations(this.faceProg, ['uFace', 'uEye', 'uRes', 'uZoom', 'uRot', 'uLerp', 'uS', 'uP0', 'uE', 'uEyeRect', 'uIrisR', 'uPupilR', 'uDetail', 'uDeep', 'uFade', 'uOct']);
       this.uPost = this.locations(this.postProg, ['uTex', 'uRes', 'uFocus', 'uBlur', 'uTime']);
 
       const buf = gl.createBuffer();
@@ -286,16 +252,49 @@ void main(){
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-      this.tex = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      this.tex = this.texture(false);
+      this.faceTex = this.texture(true);
+      this.eyeTex = this.texture(true);
+      this.fbo = gl.createFramebuffer();
+      this.W = this.H = 0;
+      this.ok = this.resize();
+      if (this.images) this.upload();
+      return this.ok;
+    }
+
+    texture(mip) {
+      const gl = this.gl;
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([7, 11, 22, 255]));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, mip ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      this.fbo = gl.createFramebuffer();
+      if (mip) gl.generateMipmap(gl.TEXTURE_2D);
+      return t;
+    }
 
-      this.ok = this.resize();
-      return this.ok;
+    load() {
+      return Promise.all([loadImage(FACE.src), loadImage(FACE.eyeSrc)]).then(([face, eye]) => {
+        this.images = { face, eye };
+        if (this.ok) this.upload();
+      });
+    }
+
+    upload() {
+      const gl = this.gl;
+      const put = (tex, img) => {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.generateMipmap(gl.TEXTURE_2D);
+      };
+      put(this.faceTex, this.images.face);
+      put(this.eyeTex, this.images.eye);
+      this.texturesReady = true;
+      this.render(performance.now());
     }
 
     program(vs, fs) {
@@ -327,7 +326,7 @@ void main(){
       const gl = this.gl;
       const w = this.canvas.clientWidth || window.innerWidth;
       const h = this.canvas.clientHeight || window.innerHeight;
-      const maxPixels = this.mobile ? 950000 : 2100000;
+      const maxPixels = this.mobile ? 1400000 : 2600000;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const scale = Math.min(dpr, Math.sqrt(maxPixels / (w * h))) * this.quality;
       const W = Math.max(2, Math.round(w * scale));
@@ -346,77 +345,79 @@ void main(){
       return true;
     }
 
+    // Enquadramento da foto: no celular o rosto fica no alto; no desktop, à direita do texto.
     layout() {
       const aspect = this.W / this.H;
-      const scale = clamp(aspect * 0.5, 0.3, 0.7);
-      const cx = clamp((aspect - 1.15) * 0.42, 0, 0.2);
-      const cy = 0.17 - 0.12 * clamp((aspect - 1) / 0.5, 0, 1);
-      return { aspect, scale, cx, cy };
+      const t = clamp((aspect - 0.8) / 0.6, 0, 1);
+      const S = 1.12 - 0.06 * t;
+      const px = (aspect / 2 - S * 0.46) * t;
+      const py = 0.12 * (1 - t) - 0.02 * t;
+      return { aspect, S, px, py };
     }
 
-    updateGaze(now, dt) {
+    updateLook(now, dt) {
       const pointerActive = finePointer && now - this.lastPointer < 2500;
-      if (!pointerActive && now > this.nextSaccade) {
-        const home = Math.random() < 0.3;
-        this.lookTarget.x = home ? 0 : (Math.random() * 2 - 1) * 0.65;
-        this.lookTarget.y = home ? 0 : (Math.random() * 2 - 1) * 0.45;
-        this.nextSaccade = now + 1300 + Math.random() * 2200;
+      if (!pointerActive && now > this.nextDrift) {
+        this.lookTarget.x = (Math.random() * 2 - 1) * 0.5;
+        this.lookTarget.y = (Math.random() * 2 - 1) * 0.4;
+        this.nextDrift = now + 2600 + Math.random() * 2600;
       }
-      const k = 1 - Math.exp(-dt * (pointerActive ? 6 : 11));
+      const k = 1 - Math.exp(-dt * (pointerActive ? 4 : 1.2));
       this.look.x += (this.lookTarget.x - this.look.x) * k;
       this.look.y += (this.lookTarget.y - this.look.y) * k;
-    }
-
-    blinkFactor(now) {
-      if (reduced) return 1;
-      if (this.blinkStart < 0 && now > this.nextBlink && eyeState.zoom < 1.05 && eyeState.open > 0.98) {
-        this.blinkStart = now;
-      }
-      if (this.blinkStart >= 0) {
-        const t = (now - this.blinkStart) / 260;
-        if (t >= 1) {
-          this.blinkStart = -1;
-          this.nextBlink = now + 3200 + Math.random() * 4200;
-          return 1;
-        }
-        return 1 - Math.pow(Math.sin(Math.PI * t), 1.4) * 0.96;
-      }
-      return 1;
     }
 
     render(now) {
       if (!this.ok) return;
       const gl = this.gl;
+      if (!this.texturesReady) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.W, this.H);
+        gl.clearColor(0.027, 0.043, 0.086, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        return;
+      }
       const L = this.layout();
-      const damp = 1 - clamp((eyeState.zoom - 1) / 1.5, 0, 1);
-      const lx = this.look.x * damp;
-      const ly = this.look.y * damp;
-      const open = eyeState.open * this.blinkFactor(now);
       const t = now / 1000;
+      const damp = 1 - clamp((eyeState.zoom - 1) / 1.5, 0, 1);
+      // paralaxe sutil com o mouse e "respiração" da câmera antes do mergulho
+      const p0x = L.px - this.look.x * 0.016 * damp;
+      const p0y = L.py - this.look.y * 0.012 * damp;
+      const breathe = reduced ? 0 : Math.sin(t * 0.9) * 0.005 * damp;
+      const zoom = eyeState.zoom * (1 + breathe + 0.08 * (1 - eyeState.open));
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.twoPass ? this.fbo : null);
       gl.viewport(0, 0, this.W, this.H);
-      gl.useProgram(this.eyeProg);
-      const u = this.uEye;
+      gl.useProgram(this.faceProg);
+      const u = this.uFace;
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.faceTex);
+      gl.uniform1i(u.uFace, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.eyeTex);
+      gl.uniform1i(u.uEye, 1);
       gl.uniform2f(u.uRes, this.W, this.H);
-      gl.uniform1f(u.uTime, t);
-      gl.uniform1f(u.uZoom, eyeState.zoom);
-      gl.uniform1f(u.uOpen, open);
+      gl.uniform1f(u.uZoom, zoom);
       gl.uniform1f(u.uRot, eyeState.rot);
-      gl.uniform1f(u.uScale, L.scale);
       gl.uniform1f(u.uLerp, eyeState.lerp);
-      gl.uniform1f(u.uDilate, eyeState.dilate);
+      gl.uniform1f(u.uS, L.S);
+      gl.uniform2f(u.uP0, p0x, p0y);
+      gl.uniform2f(u.uE, FACE.eye[0], FACE.eye[1]);
+      gl.uniform4f(u.uEyeRect, FACE.eyeRect[0], FACE.eyeRect[1], FACE.eyeRect[2], FACE.eyeRect[3]);
+      gl.uniform1f(u.uIrisR, FACE.irisR);
+      gl.uniform1f(u.uPupilR, FACE.pupilR);
+      gl.uniform1f(u.uDetail, eyeState.detail);
+      gl.uniform1f(u.uDeep, eyeState.deep);
+      gl.uniform1f(u.uFade, eyeState.open);
       gl.uniform1f(u.uOct, this.mobile ? 3 : 4);
-      gl.uniform2f(u.uLook, lx, ly);
-      gl.uniform2f(u.uCenter, L.cx, L.cy);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
       if (!this.twoPass) return;
-      // ponto focal do zoom, em coordenadas de textura (para o desfoque radial)
-      const fpx = L.cx + lx * 0.16 * L.scale;
-      const fpy = L.cy + ly * 0.07 * L.scale;
-      const tx = fpx * (1 - eyeState.lerp);
-      const ty = fpy * (1 - eyeState.lerp);
+      // ponto focal do mergulho, em coordenadas de textura (para o desfoque radial)
+      const pex = p0x + (FACE.eye[0] - 0.5) * L.S;
+      const pey = p0y + (FACE.eye[1] - 0.5) * L.S;
+      const tx = pex * (1 - eyeState.lerp);
+      const ty = pey * (1 - eyeState.lerp);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, this.W, this.H);
       gl.useProgram(this.postProg);
@@ -435,7 +436,7 @@ void main(){
       this.raf = requestAnimationFrame(this.loop);
       const dt = Math.min(0.1, Math.max(0.001, (now - this.last) / 1000));
       this.last = now;
-      this.updateGaze(now, dt);
+      this.updateLook(now, dt);
       if (heroDark() >= 0.999) return; // tela já coberta, nada a desenhar
       this.render(now);
       // qualidade adaptativa: reduz a resolução se o aparelho não acompanhar
@@ -466,10 +467,20 @@ void main(){
   const darkEl = $('.hero__dark');
   const heroDark = () => (darkEl ? parseFloat(darkEl.style.opacity || '0') : 0);
 
-  const eye = new Eye($('.hero__canvas'));
+  const eye = new Portrait($('.hero__canvas'));
   let eyeOK = false;
   try { eyeOK = eye.init(); } catch (e) { eyeOK = false; }
   if (!eyeOK) root.classList.add('no-webgl');
+
+  // fica pronto quando as fotos chegam (ou de imediato, no modo sem WebGL)
+  const heroReady = eyeOK
+    ? eye.load().catch(() => {
+      eye.stop();
+      eye.ok = false;
+      eyeOK = false;
+      root.classList.add('no-webgl');
+    })
+    : Promise.resolve();
 
   if (eyeOK) {
     const canvas = eye.canvas;
@@ -477,18 +488,19 @@ void main(){
       e.preventDefault();
       eye.stop();
       eye.ok = false;
-      root.classList.add('no-webgl');
+      eye.texturesReady = false;
     });
     canvas.addEventListener('webglcontextrestored', () => {
-      eye.W = eye.H = 0;
       if (eye.init()) {
-        root.classList.remove('no-webgl');
         if (eye.visible) eye.start();
         eye.render(performance.now());
+      } else {
+        root.classList.add('no-webgl');
       }
     });
 
     const onResize = () => {
+      if (!eye.ok) return;
       eye.mobile = mm('(max-width: 767px)') || !finePointer;
       eye.resize();
       eye.render(performance.now());
@@ -569,23 +581,24 @@ void main(){
     tl.to('.hero__scroll', { autoAlpha: 0, duration: 0.06 }, 0.02)
       .fromTo('.hero__content', { y: 0, autoAlpha: 1, filter: 'blur(0px)' }, { y: () => -window.innerHeight * 0.08, autoAlpha: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power2.in', immediateRender: false }, 0.12)
       .to('.hero__shade', { opacity: 0.35, duration: 0.4 }, 0.3)
-      .fromTo('.hero__portal', { autoAlpha: 0, scale: 0.7, filter: 'blur(0px)' }, { autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: 0.14, ease: 'power2.out', immediateRender: false }, 0.52)
-      .to('.hero__portal', { autoAlpha: 0, scale: 1.4, filter: 'blur(8px)', duration: 0.11, ease: 'power2.in' }, 0.7)
-      .fromTo(darkEl, { opacity: 0 }, { opacity: 1, duration: 0.14, immediateRender: false }, 0.8)
+      .fromTo('.hero__portal', { autoAlpha: 0, scale: 0.7, filter: 'blur(0px)' }, { autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: 0.12, ease: 'power2.out', immediateRender: false }, 0.6)
+      .to('.hero__portal', { autoAlpha: 0, scale: 1.4, filter: 'blur(8px)', duration: 0.1, ease: 'power2.in' }, 0.72)
+      .fromTo(darkEl, { opacity: 0 }, { opacity: 1, duration: 0.13, immediateRender: false }, 0.82)
       .set({}, {}, 1);
 
-    if (eyeOK) {
-      const applyZoom = () => { eyeState.zoom = Math.exp(zl.v); };
-      tl.to(zl, { v: Math.log(1.7), duration: 0.2, ease: 'power1.in', onUpdate: applyZoom }, 0.15)
-        .to(eyeState, { lerp: 0.35, duration: 0.2, ease: 'power1.in' }, 0.15)
-        .to(zl, { v: Math.log(10), duration: 0.5, ease: 'power2.in', onUpdate: applyZoom }, 0.35)
-        .to(eyeState, { lerp: 1, rot: 0.07, dilate: 1, duration: 0.5, ease: 'power2.in' }, 0.35)
-        .to(eyeState, { blur: 1, duration: 0.3, ease: 'power2.in' }, 0.5);
-    } else {
-      gsap.set('.fb-eye', { x: 0, y: 0, xPercent: -50, yPercent: -50 });
-      tl.to('.fb-eye', { scale: 1.6, duration: 0.2, ease: 'power1.in' }, 0.15)
-        .to('.fb-eye', { scale: 28, duration: 0.5, ease: 'power3.in' }, 0.35);
-    }
+    // WebGL: do rosto inteiro até dentro da pupila (zoom de ~280x em escala logarítmica)
+    const applyZoom = () => { eyeState.zoom = Math.exp(zl.v); };
+    tl.to(zl, { v: Math.log(2.4), duration: 0.2, ease: 'power1.in', onUpdate: applyZoom }, 0.13)
+      .to(eyeState, { lerp: 0.45, duration: 0.2, ease: 'power1.in' }, 0.13)
+      .to(zl, { v: Math.log(280), duration: 0.52, ease: 'power1.in', onUpdate: applyZoom }, 0.33)
+      .to(eyeState, { lerp: 1, rot: 0.06, duration: 0.45, ease: 'power2.in' }, 0.33)
+      .to(eyeState, { detail: 1, duration: 0.25 }, 0.5)
+      .to(eyeState, { blur: 1, duration: 0.3, ease: 'power2.in' }, 0.52)
+      .to(eyeState, { deep: 1, duration: 0.1 }, 0.78);
+
+    // sem WebGL: a mesma ideia com a foto em CSS (escala a partir do olho)
+    tl.to('.fb-face', { scale: 2.4, duration: 0.2, ease: 'power1.in' }, 0.13)
+      .to('.fb-face', { scale: 60, duration: 0.52, ease: 'power3.in' }, 0.33);
   }
 
   /* ========================================================================
@@ -1299,11 +1312,18 @@ void main(){
     processLine();
   }
 
+  let started = false;
   const start = () => {
+    if (started) return;
+    started = true;
     intro();
     if (hasGSAP) ScrollTrigger.refresh();
   };
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-  Promise.race([fontsReady, new Promise((r) => setTimeout(r, 1200))]).then(start, start);
+  Promise.all([
+    Promise.race([fontsReady, wait(1200)]),
+    Promise.race([heroReady, wait(3200)]),
+  ]).then(start, start);
   window.addEventListener('load', () => { if (hasGSAP) ScrollTrigger.refresh(); });
 })();

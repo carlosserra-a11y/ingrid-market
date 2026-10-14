@@ -439,51 +439,20 @@ body::after {
 }
 .no-webgl .hero__canvas, .no-js .hero__canvas { display: none; }
 
-/* olho em CSS (fallback sem WebGL) */
-.hero__fallback { position: absolute; inset: 0; display: none; z-index: 0; }
+/* foto em CSS (fallback sem WebGL) */
+.hero__fallback { position: absolute; inset: 0; display: none; z-index: 0; overflow: hidden; background: var(--bg); }
 .no-webgl .hero__fallback, .no-js .hero__fallback { display: block; }
-.fb-eye {
+.fb-face {
   position: absolute;
-  left: 58%;
-  top: 46%;
-  width: min(150vh, 118vw);
-  aspect-ratio: 2 / 0.92;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(60% 70% at 50% 50%, #c9cbd6 0%, #8a8fa6 55%, #2b2f45 100%);
-  box-shadow: 0 0 120px 10px rgba(79, 107, 255, 0.35);
-}
-.fb-iris {
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 43%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(233, 201, 169, 0.9) 31%, #c08a4a 40%, #3d5afe 52%, #2b3fd0 70%, #0a1240 92%, #050818 100%),
-    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.08) 0 2deg, transparent 2deg 5deg);
-  background-blend-mode: screen;
-}
-.fb-pupil {
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 32%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #04060c;
-}
-.fb-pupil::after {
-  content: "";
-  position: absolute;
-  left: -40%; top: -45%;
-  width: 34%; height: 58%;
-  border-radius: 6px;
-  background: rgba(240, 244, 255, 0.85);
-  transform: rotate(-14deg);
-  filter: blur(1px);
+  top: calc(50% - 53vh);
+  right: -4vh;
+  width: 106vh;
+  height: 106vh;
+  max-width: none;
+  object-fit: cover;
+  transform-origin: 57.705% 39.418%;
+  -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
 }
 
 .hero__shade {
@@ -1360,7 +1329,7 @@ body::after {
   }
   .hero__scroll { display: none; }
   .hero__ctas .btn { flex: 1 1 auto; }
-  .fb-eye { left: 50%; top: 32%; width: 150vw; }
+  .fb-face { right: auto; left: calc(50% - 56svh); top: calc(40% - 56svh); width: 112svh; height: 112svh; }
   .work__head { flex-direction: column; align-items: flex-start; }
   .work__hint { text-align: left; }
   .services__grid { grid-template-columns: minmax(0, 1fr); }
