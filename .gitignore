@@ -1,0 +1,19 @@
+# sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editores e ferramentas locais
+.vscode/
+.idea/
+.claude/
+
+# dependências e builds (não usados, mas por segurança)
+node_modules/
+dist/
+
+# arquivos de mídia originais (exporte para assets/ antes de versionar)
+*.MOV
+*.mov
+*.HEIC
+*.heic

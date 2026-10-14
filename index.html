@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="pt-BR" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ingrid Lima · Vídeomaker Mobile, Social Media e Tráfego Pago</title>
+  <meta name="description" content="Ingrid Lima é vídeomaker mobile e social media em Santa Catarina. Vídeos feitos no celular com olhar profissional, gestão de redes e tráfego pago — do roteiro ao anúncio.">
+  <meta name="theme-color" content="#070B16">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Open Graph / compartilhamento (troque pela URL final do site após publicar) -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Ingrid Lima · Vídeomaker Mobile">
+  <meta property="og:description" content="Seu público já está olhando. Eu faço ele parar. Vídeos mobile, social media e tráfego pago.">
+  <meta property="og:image" content="assets/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    // Marca que o JS está ativo e garante que o loader nunca fique preso na tela.
+    document.documentElement.classList.replace('no-js', 'js');
+    setTimeout(function () { document.documentElement.classList.add('is-loaded'); }, 4000);
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "#ingrid",
+        "name": "Ingrid Lima",
+        "jobTitle": "Vídeomaker Mobile e Social Media",
+        "image": "assets/img/ingrid-retrato-1000.jpg",
+        "sameAs": [
+          "https://www.instagram.com/ingridlimadomkt/",
+          "https://www.tiktok.com/@ingridlimasp"
+        ]
+      },
+      {
+        "@type": "ProfessionalService",
+        "name": "Ingrid Lima · Vídeomaker Mobile",
+        "description": "Vídeos mobile, social media e tráfego pago para marcas.",
+        "founder": { "@id": "#ingrid" },
+        "telephone": "+55 48 99696-6456",
+        "areaServed": "Santa Catarina, Brasil",
+        "image": "assets/img/og.jpg",
+        "sameAs": [
+          "https://www.instagram.com/ingridlimadomkt/",
+          "https://www.tiktok.com/@ingridlimasp"
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#manifesto">Pular para o conteúdo</a>
+
+  <div class="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <span class="loader__star">✦</span>
+      <span class="loader__name"><span>Ingrid</span> <span>Lima</span></span>
+    </div>
+    <div class="loader__bar"><span></span></div>
+  </div>
+
+  <div class="progress" aria-hidden="true"><span></span></div>
+
+  <div class="cursor" aria-hidden="true">
+    <span class="cursor__ring"></span>
+    <span class="cursor__label">Play</span>
+  </div>
+
+  <header class="nav" data-nav>
+    <div class="nav__inner container">
+      <a class="nav__logo" href="#topo" aria-label="Ingrid Lima, voltar ao início">Ingrid Lima <span aria-hidden="true">✦</span></a>
+      <nav class="nav__links" aria-label="Principal">
+        <a href="#servicos">Serviços</a>
+        <a href="#trabalhos">Trabalhos</a>
+        <a href="#processo">Processo</a>
+        <a href="#sobre">Sobre</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn--primary btn--small nav__cta" data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">Fale comigo</a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu-mobile" aria-label="Abrir menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu-mobile" id="menu-mobile" hidden>
+    <nav class="menu-mobile__links" aria-label="Menu mobile">
+      <a href="#servicos">Serviços</a>
+      <a href="#trabalhos">Trabalhos</a>
+      <a href="#processo">Processo</a>
+      <a href="#sobre">Sobre</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contato">Contato</a>
+    </nav>
+    <a class="btn btn--primary menu-mobile__cta" data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">Chamar no WhatsApp</a>
+  </div>
+
+  <main>
+    <!-- ============ HERO: a câmera entra no olho ============ -->
+    <section class="hero" id="topo" aria-labelledby="hero-title">
+      <div class="hero__stage">
+        <canvas class="hero__canvas" aria-hidden="true"></canvas>
+        <div class="hero__fallback" aria-hidden="true">
+          <div class="fb-eye"><div class="fb-iris"><div class="fb-pupil"></div></div></div>
+        </div>
+        <div class="hero__shade" aria-hidden="true"></div>
+
+        <div class="hero__content container">
+          <p class="eyebrow hero__eyebrow"><span aria-hidden="true">✦</span> Vídeomaker mobile · Social media · Tráfego pago</p>
+          <h1 class="hero__title" id="hero-title">
+            <span class="hero__line"><span>Seu público já</span></span>
+            <span class="hero__line"><span>está olhando.</span></span>
+            <span class="hero__line hero__line--accent"><span><em>Eu faço ele parar.</em></span></span>
+          </h1>
+          <p class="hero__sub">Vídeos feitos no celular, com olhar profissional, do roteiro ao tráfego pago.</p>
+          <div class="hero__ctas">
+            <a class="btn btn--primary" data-magnetic data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">
+              Quero meu conteúdo <span class="btn__arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="btn btn--ghost" href="#trabalhos">Ver trabalhos</a>
+          </div>
+        </div>
+
+        <p class="hero__portal" aria-hidden="true">Bem-vindo ao <em>outro lado</em> da tela <span>✦</span></p>
+        <div class="hero__scroll" aria-hidden="true"><span>Role para entrar</span><i></i></div>
+        <div class="hero__dark" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- ============ MANIFESTO ============ -->
+    <section class="manifesto" id="manifesto" aria-label="Manifesto" tabindex="-1">
+      <div class="container">
+        <p class="label" data-reveal><span aria-hidden="true">✦</span> Manifesto</p>
+        <p class="manifesto__text" data-words>Eu transformo ideias em conteúdo que faz a sua marca ser <em>vista</em>, <em>lembrada</em> e <em>escolhida</em>.</p>
+      </div>
+    </section>
+
+    <!-- ============ SERVIÇOS ============ -->
+    <section class="services" id="servicos" aria-labelledby="services-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> Serviços</p>
+          <h2 class="h2" id="services-title" data-split>Tudo o que sua marca precisa para <em>aparecer</em>.</h2>
+        </div>
+
+        <div class="services__grid" data-reveal-group>
+          <article class="card" data-glow>
+            <div class="card__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 4h10a5 5 0 0 1 5 5v30a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5z" pathLength="1"/>
+                <path d="M21 9h6" pathLength="1"/>
+                <path d="M21.5 20.5v8l7-4z" pathLength="1"/>
+              </svg>
+            </div>
+            <h3>Vídeos mobile</h3>
+            <p>Reels, bastidores e cobertura de eventos e lojas, gravados no celular com a linguagem de quem rola o feed.</p>
+          </article>
+
+          <article class="card" data-glow>
+            <div class="card__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 8h24a6 6 0 0 1 6 6v22a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6z" pathLength="1"/>
+                <path d="M6 18h36M16 4v8M32 4v8" pathLength="1"/>
+                <path d="M15 27h6M27 27h6M15 34h6" pathLength="1"/>
+              </svg>
+            </div>
+            <h3>Social media</h3>
+            <p>Estratégia, calendário e gestão do seu perfil, para você postar com constância e propósito.</p>
+          </article>
+
+          <article class="card" data-glow>
+            <div class="card__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M38 26a16 16 0 1 1-32 0a16 16 0 1 1 32 0z" pathLength="1"/>
+                <path d="M30 26a8 8 0 1 1-16 0a8 8 0 1 1 16 0z" pathLength="1"/>
+                <path d="M22 26L40 8M34 8h6v6" pathLength="1"/>
+              </svg>
+            </div>
+            <h3>Tráfego pago</h3>
+            <p>Anúncios que levam o seu conteúdo até quem está pronto para comprar, com acompanhamento de resultados.</p>
+          </article>
+
+          <article class="card" data-glow>
+            <div class="card__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 14h36v26H6z" pathLength="1"/>
+                <path d="M6 14l6-8h8l-6 8M20 14l6-8h8l-6 8" pathLength="1"/>
+                <path d="M14 27h20M14 33h12" pathLength="1"/>
+              </svg>
+            </div>
+            <h3>Captação e edição</h3>
+            <p>Roteiro, direção, captação e edição dinâmica, com legendas, ritmo e a identidade da sua marca.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MARCAS ============ -->
+    <section class="brands" aria-label="Marcas atendidas">
+      <p class="brands__label container"><span aria-hidden="true">✦</span> Conteúdo criado para</p>
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track">
+          <div class="marquee__group">
+            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
+          </div>
+          <div class="marquee__group">
+            <span>Cloud Tech</span><i>✦</i><span>Dimas Omoda Jaecoo</span><i>✦</i><span>Dra. Elizabeth Mello</span><i>✦</i><span class="is-outline">Tecnologia</span><i>✦</i><span class="is-outline">Automotivo</span><i>✦</i><span class="is-outline">Saúde</span><i>✦</i><span class="is-outline">Eventos</span><i>✦</i>
+          </div>
+        </div>
+      </div>
+      <p class="sr-only">Marcas atendidas: Cloud Tech, Dimas Omoda Jaecoo e Dra. Elizabeth Mello, nos segmentos de tecnologia, automotivo, saúde e eventos.</p>
+    </section>
+
+    <!-- ============ PORTFÓLIO ============ -->
+    <section class="work" id="trabalhos" aria-labelledby="work-title">
+      <div class="work__inner">
+        <div class="work__head container">
+          <div>
+            <p class="label" data-reveal><span aria-hidden="true">✦</span> Trabalhos</p>
+            <h2 class="h2" id="work-title" data-split>Conteúdo que já está <em>rodando</em> por aí.</h2>
+          </div>
+          <p class="work__hint" data-reveal>Toque em um vídeo para assistir com som.</p>
+        </div>
+
+        <ul class="work__track" role="list">
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="0" data-cursor="play" aria-label="Assistir com som: Omoda 7, para Dimas Omoda Jaecoo">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/omoda-7.webp" width="720" height="1280">
+                <source src="assets/videos/omoda-7.mp4" type="video/mp4">
+                <source src="assets/videos/omoda-7.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Automotivo</span><h3>Omoda 7 · apresentação</h3><p>Dimas Omoda Jaecoo</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="1" data-cursor="play" aria-label="Assistir com som: Poco X8 Pro, para Cloud Tech">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/cloudtech-poco-x8-pro.webp" width="720" height="1280">
+                <source src="assets/videos/cloudtech-poco-x8-pro.mp4" type="video/mp4">
+                <source src="assets/videos/cloudtech-poco-x8-pro.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Tecnologia</span><h3>Poco X8 Pro · review</h3><p>Cloud Tech</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="2" data-cursor="play" aria-label="Assistir com som: Jaecoo 5 80's Night, para Dimas Omoda Jaecoo">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/jaecoo-5-80s-night.webp" width="720" height="1280">
+                <source src="assets/videos/jaecoo-5-80s-night.mp4" type="video/mp4">
+                <source src="assets/videos/jaecoo-5-80s-night.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Evento</span><h3>Jaecoo 5 · 80's Night</h3><p>Dimas Omoda Jaecoo</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="3" data-cursor="play" aria-label="Assistir com som: Implantes, para Dra. Elizabeth Mello">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/dra-elizabeth-implantes.webp" width="720" height="1280">
+                <source src="assets/videos/dra-elizabeth-implantes.mp4" type="video/mp4">
+                <source src="assets/videos/dra-elizabeth-implantes.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Saúde</span><h3>Implantes · autoridade</h3><p>Dra. Elizabeth Mello</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="4" data-cursor="play" aria-label="Assistir com som: Seminovos, para Cloud Tech">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/cloudtech-seminovos.webp" width="720" height="1280">
+                <source src="assets/videos/cloudtech-seminovos.mp4" type="video/mp4">
+                <source src="assets/videos/cloudtech-seminovos.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Varejo</span><h3>Seminovos lacrados</h3><p>Cloud Tech</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="5" data-cursor="play" aria-label="Assistir com som: Super Hybrid, tour pelo interior, para Dimas Omoda Jaecoo">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/tour-interior.webp" width="720" height="1280">
+                <source src="assets/videos/tour-interior.mp4" type="video/mp4">
+                <source src="assets/videos/tour-interior.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Automotivo</span><h3>Super Hybrid · tour</h3><p>Dimas Omoda Jaecoo</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="6" data-cursor="play" aria-label="Assistir com som: Smartphone em destaque, para Cloud Tech">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/cloudtech-smartphone.webp" width="720" height="1280">
+                <source src="assets/videos/cloudtech-smartphone.mp4" type="video/mp4">
+                <source src="assets/videos/cloudtech-smartphone.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Tecnologia</span><h3>Smartphone em destaque</h3><p>Cloud Tech</p></div>
+          </li>
+          <li class="reel">
+            <button class="reel__phone" type="button" data-reel="7" data-cursor="play" aria-label="Assistir com som: Prótese dentária, para Dra. Elizabeth Mello">
+              <video muted playsinline loop preload="none" poster="assets/img/posters/dra-elizabeth-protese.webp" width="720" height="1280">
+                <source src="assets/videos/dra-elizabeth-protese.mp4" type="video/mp4">
+                <source src="assets/videos/dra-elizabeth-protese.webm" type="video/webm">
+              </video>
+              <span class="reel__island" aria-hidden="true"></span>
+              <span class="reel__play" aria-hidden="true"></span>
+            </button>
+            <div class="reel__meta"><span class="chip">Saúde</span><h3>Prótese · avaliação</h3><p>Dra. Elizabeth Mello</p></div>
+          </li>
+          <li class="reel reel--cta">
+            <a class="reel__next" data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">
+              <span class="reel__next-star" aria-hidden="true">✦</span>
+              <span class="reel__next-title">O próximo vídeo pode ser o <em>seu</em>.</span>
+              <span class="reel__next-link">Vamos conversar →</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ PROCESSO ============ -->
+    <section class="process" id="processo" aria-labelledby="process-title">
+      <div class="container process__inner">
+        <div class="section-head process__head">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> Processo</p>
+          <h2 class="h2" id="process-title" data-split>Do roteiro <em>ao anúncio</em>.</h2>
+          <p class="section-sub" data-reveal>Um caminho simples, sem complicação, para você ter conteúdo bom no ar e chegando nas pessoas certas.</p>
+        </div>
+
+        <div class="steps">
+          <svg class="steps__line" viewBox="0 0 2 100" preserveAspectRatio="none" aria-hidden="true">
+            <path class="steps__line-bg" d="M1 0V100" pathLength="1"/>
+            <path class="steps__line-fg" d="M1 0V100" pathLength="1"/>
+          </svg>
+          <ol class="steps__list">
+            <li class="step">
+              <span class="step__dot" aria-hidden="true"></span>
+              <span class="step__n">01</span>
+              <h3>Conversa</h3>
+              <p>Entendo sua marca, seu público e o que você quer alcançar. Daí sai a ideia certa para o seu momento.</p>
+            </li>
+            <li class="step">
+              <span class="step__dot" aria-hidden="true"></span>
+              <span class="step__n">02</span>
+              <h3>Roteiro e captação</h3>
+              <p>Roteiro pensado para prender nos primeiros segundos e gravação no local, com direção e naturalidade.</p>
+            </li>
+            <li class="step">
+              <span class="step__dot" aria-hidden="true"></span>
+              <span class="step__n">03</span>
+              <h3>Edição</h3>
+              <p>Cortes no ritmo do feed, legendas, trilha e a identidade visual da sua marca em cada vídeo.</p>
+            </li>
+            <li class="step">
+              <span class="step__dot" aria-hidden="true"></span>
+              <span class="step__n">04</span>
+              <h3>Publicação e tráfego</h3>
+              <p>Conteúdo no ar e anúncios para entregar o vídeo a quem pode comprar de você.</p>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ O QUE VOCÊ RECEBE ============ -->
+    <section class="deliver" aria-labelledby="deliver-title">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> O que você recebe</p>
+          <h2 class="h2" id="deliver-title" data-split>Conteúdo <em>pronto</em> para postar.</h2>
+        </div>
+        <ul class="deliver__list" role="list" data-reveal-group>
+          <li><i aria-hidden="true">✦</i><strong>Vídeos verticais</strong><p>No formato certo para Reels, TikTok e Stories.</p></li>
+          <li><i aria-hidden="true">✦</i><strong>Legendas e cortes</strong><p>No ritmo de quem consome conteúdo no celular.</p></li>
+          <li><i aria-hidden="true">✦</i><strong>Identidade da sua marca</strong><p>Em cada detalhe, do texto à trilha.</p></li>
+          <li><i aria-hidden="true">✦</i><strong>Tráfego pago</strong><p>Para o conteúdo chegar a quem importa.</p></li>
+          <li><i aria-hidden="true">✦</i><strong>Atendimento direto</strong><p>Comigo, do briefing à entrega.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SOBRE ============ -->
+    <section class="about" id="sobre" aria-labelledby="about-title">
+      <div class="container about__inner">
+        <div class="about__media">
+          <figure class="about__photo about__photo--main" data-parallax="-8">
+            <picture>
+              <source type="image/webp" srcset="assets/img/ingrid-retrato-600.webp 600w, assets/img/ingrid-retrato-1000.webp 1000w, assets/img/ingrid-retrato-1400.webp 1400w" sizes="(max-width: 900px) 86vw, 42vw">
+              <img src="assets/img/ingrid-retrato-1000.jpg" alt="Retrato de Ingrid Lima sorrindo, com cabelo cacheado, diante de uma parede terracota" width="1000" height="1250" loading="lazy" decoding="async">
+            </picture>
+          </figure>
+          <figure class="about__photo about__photo--small" data-parallax="14">
+            <picture>
+              <source type="image/webp" srcset="assets/img/ingrid-showroom-500.webp 500w, assets/img/ingrid-showroom-900.webp 900w" sizes="(max-width: 900px) 42vw, 18vw">
+              <img src="assets/img/ingrid-showroom-900.jpg" alt="Ingrid Lima em um showroom de carros durante uma gravação" width="900" height="1125" loading="lazy" decoding="async">
+            </picture>
+          </figure>
+          <span class="about__badge" aria-hidden="true">✦ gravado no celular</span>
+        </div>
+
+        <div class="about__text">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> Sobre</p>
+          <h2 class="h2" id="about-title" data-split>Oi, eu sou a <em>Ingrid</em>.</h2>
+          <div data-reveal-group>
+            <p>Sou vídeomaker mobile e social media em Santa Catarina. Meu trabalho é transformar o que a sua marca tem de melhor em conteúdo que prende a atenção nos primeiros segundos e, depois, levar esse conteúdo até as pessoas certas com tráfego pago.</p>
+            <p>Gravo com o celular porque é assim que o seu cliente assiste: rápido, próximo e real. Do lançamento de um carro a um consultório, de uma loja de tecnologia a um evento, eu cuido de tudo, do roteiro à publicação.</p>
+            <div class="about__links">
+              <a class="link-arrow" href="https://www.instagram.com/ingridlimadomkt/" target="_blank" rel="noopener">Instagram @ingridlimadomkt</a>
+              <a class="link-arrow" href="https://www.tiktok.com/@ingridlimasp" target="_blank" rel="noopener">TikTok @ingridlimasp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEPOIMENTOS (renderizado só quando houver depoimentos reais em main.js) ============ -->
+    <section class="testimonials" id="depoimentos" aria-labelledby="testimonials-title" hidden>
+      <div class="container">
+        <div class="section-head">
+          <p class="label"><span aria-hidden="true">✦</span> Depoimentos</p>
+          <h2 class="h2" id="testimonials-title">Quem já <em>trabalhou</em> comigo.</h2>
+        </div>
+        <div class="testimonials__grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <div class="container faq__inner">
+        <div class="section-head">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> Dúvidas</p>
+          <h2 class="h2" id="faq-title" data-split>Perguntas <em>frequentes</em>.</h2>
+        </div>
+        <div class="faq__list" data-reveal-group>
+          <div class="faq__item">
+            <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-1" id="faq-1-q">Você grava no celular mesmo?<span class="faq__icon" aria-hidden="true"></span></button></h3>
+            <div class="faq__a" id="faq-1" role="region" aria-labelledby="faq-1-q"><div><p>Sim! Uso o celular com técnica: estabilização, luz e áudio cuidados. O resultado é um vídeo com cara de feed, natural, rápido e que conversa com quem assiste, mas com acabamento profissional.</p></div></div>
+          </div>
+          <div class="faq__item">
+            <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-2" id="faq-2-q">Como funciona o tráfego pago?<span class="faq__icon" aria-hidden="true"></span></button></h3>
+            <div class="faq__a" id="faq-2" role="region" aria-labelledby="faq-2-q"><div><p>Depois que o conteúdo está pronto, eu crio anúncios nas redes sociais para entregar os seus vídeos ao público certo, por região, interesses e comportamento. Assim o conteúdo não fica só para quem já te segue.</p></div></div>
+          </div>
+          <div class="faq__item">
+            <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-3" id="faq-3-q">Quanto tempo leva para ficar pronto?<span class="faq__icon" aria-hidden="true"></span></button></h3>
+            <div class="faq__a" id="faq-3" role="region" aria-labelledby="faq-3-q"><div><p>Depende do projeto e da quantidade de vídeos. Na nossa primeira conversa eu já te passo um prazo claro para cada entrega.</p></div></div>
+          </div>
+          <div class="faq__item">
+            <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-4" id="faq-4-q">Atende a minha cidade?<span class="faq__icon" aria-hidden="true"></span></button></h3>
+            <div class="faq__a" id="faq-4" role="region" aria-labelledby="faq-4-q"><div><p>Para gravações presenciais, atendo em Santa Catarina. Me chama no WhatsApp para confirmarmos a sua região. Social media e tráfego pago podem ser feitos a distância.</p></div></div>
+          </div>
+          <div class="faq__item">
+            <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-5" id="faq-5-q">Quanto custa?<span class="faq__icon" aria-hidden="true"></span></button></h3>
+            <div class="faq__a" id="faq-5" role="region" aria-labelledby="faq-5-q"><div><p>Cada projeto é montado de acordo com o que a sua marca precisa: um vídeo avulso, um pacote mensal ou a gestão completa. Me conta o seu objetivo e eu te mando uma proposta.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONTATO ============ -->
+    <section class="contact" id="contato" aria-labelledby="contact-title">
+      <div class="contact__glow" aria-hidden="true"></div>
+      <div class="container contact__inner">
+        <div class="contact__intro">
+          <p class="label" data-reveal><span aria-hidden="true">✦</span> Contato</p>
+          <h2 class="contact__title" id="contact-title" data-split>Vamos fazer a sua marca ser <em>vista</em>?</h2>
+          <p class="section-sub" data-reveal>Me conta o que você precisa. Respondo pessoalmente no WhatsApp.</p>
+          <div class="contact__person" data-reveal>
+            <picture>
+              <source type="image/webp" srcset="assets/img/ingrid-avatar-240.webp 240w, assets/img/ingrid-avatar-480.webp 480w" sizes="72px">
+              <img src="assets/img/ingrid-avatar-480.jpg" alt="Foto de Ingrid Lima" width="72" height="72" loading="lazy" decoding="async">
+            </picture>
+            <div>
+              <strong>Ingrid Lima</strong>
+              <span>Vídeomaker mobile · (48) 99696-6456</span>
+            </div>
+          </div>
+          <a class="btn btn--primary btn--xl" data-magnetic data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">
+            <svg class="btn__wa" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.24.68-1.42 1.3-1.95 1.35-.5.05-.97.23-3.27-.68-2.77-1.09-4.52-3.92-4.66-4.1-.13-.18-1.11-1.48-1.11-2.82s.7-2 .95-2.27c.25-.27.54-.34.72-.34.18 0 .36 0 .52.01.17.01.39-.06.61.47.23.54.77 1.88.84 2.02.07.14.11.3.02.48-.09.18-.14.3-.27.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.27.14.43.11.59-.07.16-.18.68-.79.86-1.07.18-.27.36-.23.61-.14.25.09 1.58.75 1.85.88.27.14.45.2.52.32.07.11.07.66-.17 1.34z"/></svg>
+            Chamar no WhatsApp
+          </a>
+        </div>
+
+        <form class="form" id="lead-form" novalidate data-reveal>
+          <div class="form__row">
+            <div class="field">
+              <label for="f-nome">Seu nome</label>
+              <input id="f-nome" name="nome" type="text" autocomplete="name" required minlength="2" aria-describedby="f-nome-err" placeholder="Como posso te chamar?">
+              <p class="field__err" id="f-nome-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-whats">WhatsApp</label>
+              <input id="f-whats" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel-national" required aria-describedby="f-whats-err" placeholder="(48) 99999-9999" maxlength="16">
+              <p class="field__err" id="f-whats-err"></p>
+            </div>
+          </div>
+          <div class="form__row">
+            <div class="field">
+              <label for="f-seg">Segmento da sua marca</label>
+              <select id="f-seg" name="segmento" required aria-describedby="f-seg-err">
+                <option value="">Selecione</option>
+                <option>Loja / varejo</option>
+                <option>Automotivo</option>
+                <option>Saúde e estética</option>
+                <option>Alimentação</option>
+                <option>Eventos</option>
+                <option>Serviços</option>
+                <option>Outro</option>
+              </select>
+              <p class="field__err" id="f-seg-err"></p>
+            </div>
+            <fieldset class="field field--chips">
+              <legend>Tenho interesse em</legend>
+              <div class="chips" role="group" aria-describedby="f-int-err">
+                <label class="chip-opt"><input type="checkbox" name="interesse" value="Vídeos mobile"><span>Vídeos</span></label>
+                <label class="chip-opt"><input type="checkbox" name="interesse" value="Social media"><span>Social media</span></label>
+                <label class="chip-opt"><input type="checkbox" name="interesse" value="Tráfego pago"><span>Tráfego pago</span></label>
+                <label class="chip-opt"><input type="checkbox" name="interesse" value="Pacote completo"><span>Pacote completo</span></label>
+              </div>
+              <p class="field__err" id="f-int-err"></p>
+            </fieldset>
+          </div>
+          <div class="field">
+            <label for="f-msg">Mensagem <span class="field__opt">(opcional)</span></label>
+            <textarea id="f-msg" name="mensagem" rows="3" maxlength="600" placeholder="Conta rapidinho o que você precisa"></textarea>
+          </div>
+          <button class="btn btn--primary btn--block form__submit" type="submit" data-magnetic>
+            <span class="form__submit-label">Enviar e abrir o WhatsApp</span>
+            <span class="form__spinner" aria-hidden="true"></span>
+          </button>
+          <p class="form__status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__big" aria-hidden="true">Ingrid Lima <span>✦</span></p>
+      <div class="footer__row">
+        <nav class="footer__links" aria-label="Redes sociais">
+          <a href="https://www.instagram.com/ingridlimadomkt/" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://www.tiktok.com/@ingridlimasp" target="_blank" rel="noopener">TikTok</a>
+          <a data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener">WhatsApp</a>
+        </nav>
+        <p class="footer__copy">© <span data-year>2026</span> Ingrid Lima · Vídeomaker mobile, social media e tráfego pago.</p>
+        <a class="footer__top" href="#topo">Voltar ao topo <span aria-hidden="true">↑</span></a>
+      </div>
+    </div>
+  </footer>
+
+  <a class="wa-float" data-wa href="https://wa.me/5548996966456?text=Oi%2C%20Ingrid!%20Vim%20pelo%20seu%20site%20e%20quero%20conversar%20sobre%20conte%C3%BAdo%20para%20a%20minha%20marca." target="_blank" rel="noopener" aria-label="Conversar com a Ingrid no WhatsApp">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.24.68-1.42 1.3-1.95 1.35-.5.05-.97.23-3.27-.68-2.77-1.09-4.52-3.92-4.66-4.1-.13-.18-1.11-1.48-1.11-2.82s.7-2 .95-2.27c.25-.27.54-.34.72-.34.18 0 .36 0 .52.01.17.01.39-.06.61.47.23.54.77 1.88.84 2.02.07.14.11.3.02.48-.09.18-.14.3-.27.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.27.14.43.11.59-.07.16-.18.68-.79.86-1.07.18-.27.36-.23.61-.14.25.09 1.58.75 1.85.88.27.14.45.2.52.32.07.11.07.66-.17 1.34z"/></svg>
+  </a>
+
+  <dialog class="lightbox" aria-labelledby="lightbox-title">
+    <div class="lightbox__body">
+      <div class="lightbox__frame">
+        <video class="lightbox__video" controls playsinline preload="auto"></video>
+      </div>
+      <div class="lightbox__meta">
+        <span class="chip lightbox__chip"></span>
+        <h3 id="lightbox-title"></h3>
+        <p class="lightbox__client"></p>
+        <div class="lightbox__nav">
+          <button class="lightbox__btn" type="button" data-lb="prev" aria-label="Vídeo anterior">←</button>
+          <button class="lightbox__btn" type="button" data-lb="next" aria-label="Próximo vídeo">→</button>
+        </div>
+      </div>
+    </div>
+    <button class="lightbox__close" type="button" data-lb="close" aria-label="Fechar vídeo">
+      <span aria-hidden="true"></span>
+    </button>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" integrity="sha384-HOvlOYPIs/zjoIkWUGXkVmXsjr8GuZLV+Q+rcPwmJOVZVpvTSXQChiN4t9Euv9Vc" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" integrity="sha384-P8VzCVnT9NBUkMrpcIZrJbA7EBjJvh/fJS6PmP+4nLIM284DtsImIv8D0fFjIkeh" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js" integrity="sha384-FKTX0CNJ8ngN1oGMBReVu7mvjTJyjFiD5etb1NKnYxc+8eFI2O0KWnksTN+oTFcu" crossorigin="anonymous" defer></script>
+  <script src="main.js" defer></script>
+</body>
+</html>
