@@ -2,7 +2,7 @@
 
 Landing page da **Ingrid Lima**, vídeomaker mobile, social media e tráfego pago ([@ingridlimadomkt](https://www.instagram.com/ingridlimadomkt/)).
 
-Página única, estática, com animações ligadas à rolagem. O destaque é o hero: o rosto real da Ingrid ocupa o fundo da página e, conforme a pessoa rola, a câmera mergulha no olho dela até entrar na pupila.
+Página única, estática, com animações ligadas à rolagem. O destaque é o hero: um olho castanho realista, desenhado por código, ocupa o fundo da página e, conforme a pessoa rola, a câmera mergulha na íris até entrar na pupila.
 
 ## Estrutura
 
@@ -69,28 +69,33 @@ Os vídeos só carregam quando aparecem na tela (`preload="none"`). No máximo 2
 ### Depoimentos
 Em `main.js`, preencha `TESTIMONIALS` com depoimentos **reais**. Enquanto a lista estiver vazia, a seção fica oculta.
 
-### O rosto e o olho do hero
-O hero usa a foto real da Ingrid (`IMG_5588`) renderizada em **WebGL** (`FACE_FRAG` no `main.js`):
+### O olho do hero
+O olho é desenhado em **WebGL, direto no código** (`EYE_FRAG` no `main.js`), sem nenhuma imagem. Por isso fica nítido em qualquer tela e em qualquer zoom:
 
-- `assets/img/hero-face-2048.webp`: recorte quadrado do rosto (2048 px).
-- `assets/img/hero-eye-2048.webp`: o olho em alta, usado na aproximação.
-- Dentro do olho (zoom de ~8× a 320×), a foto dá lugar a uma **íris procedural fotorrealista** nas cores do olho da Ingrid: fibras, colarete, criptas, sulcos de contração, anel limbal e pupila de borda nítida. Os detalhes se multiplicam conforme o zoom (nível de detalhe contínuo), então ela fica nítida em qualquer tela. O reflexo de luz real da foto é mantido por cima. A paleta fica na função `iris()` do shader.
+- **Íris castanha fotorrealista** (função `iris()`): fibras, filamentos dourados, colarete em zigue-zague, criptas, sulcos de contração, anel limbal e pupila de borda nítida. Os detalhes se multiplicam conforme a câmera se aproxima (nível de detalhe contínuo).
+- **Olhar feminino e delicado:** formato amendoado com o canto externo erguido, cílios longos e curvados com efeito de rímel (mais longos no canto externo, cada fio escuro na raiz, castanho na ponta e com brilho), sobrancelha fina e arqueada fio a fio, sombra rosé-dourada com brilho fino e iluminador no osso da sobrancelha.
+- **Delineado:** nasce quase invisível no canto interno, segue rente aos cílios, engrossa no terço externo e termina num gatinho afilado que continua a curva da pálpebra inferior; tem acabamento acetinado, textura de pigmento e um esfumado marrom suave embaixo, no canto externo.
+- **Olho completo** (função `shade()`): pele com relevo 3D (osso da sobrancelha, cavidade, pálpebra, vinco, poros e ruguinhas) iluminada com subsurface; sobrancelha fio a fio; cílios em tufos (3 camadas em cima, 2 embaixo) com sombra projetada; esclera com luz esférica, veias finas e carúncula; linha d'água úmida; cáustica de luz na íris e o reflexo de uma janela na córnea.
+- **Câmera:** o olho abre desfocado e a lente "puxa o foco", com um quadrado de autofoco na pupila (a pupila contrai com a luz). Clicar ou tocar no olho dispara o autofoco ali (toque para focar), e o cursor mostra "Foco".
+- **Lente macro** (pós-processamento): o foco fica no olho e a pele ao redor desfoca com a distância, como numa foto macro.
+- **Vivo:** pisca de forma natural (às vezes duas vezes), faz microssacadas, segue o mouse (no celular, olha em volta sozinho), as pálpebras acompanham o olhar e a pupila oscila e dilata quando o mouse passa nos botões. A abertura inicial acontece em duas etapas.
 - O desfoque de movimento acompanha a velocidade da rolagem: quando a pessoa para, a íris fica nítida.
 
-Para trocar a foto, gere as duas texturas a partir do novo retrato e recalibre o objeto `FACE` no topo da seção do hero em `main.js`:
+Para ajustar:
 
-- `eye`: centro da pupila (uv de 0 a 1, com y para cima);
-- `eyeRect`: área coberta pela textura do olho;
-- `irisR` / `pupilR`: raios da íris e da pupila, em fração da largura da foto.
+- **Cores da íris:** `cDark`, `cBrown`, `cAmber` e `cGold` dentro de `iris()`.
+- **Tom da pele:** a primeira linha `vec3 skin=...` em `shade()`.
+- **Posição e tamanho:** função `layout()` da classe `Eye`.
+- **Ritmo do mergulho:** `heroScroll()`. O zoom é definido pelo tamanho da íris na tela (`zoomFor`), então funciona igual no celular e no desktop. A altura do hero fica no CSS: `.hero { height: 300svh }` (220svh no celular).
 
-O enquadramento (rosto à direita no desktop, no alto no celular) fica na função `layout()` da classe `Portrait`. O ritmo do mergulho fica em `heroScroll()`, onde cada etapa tem uma posição na linha do tempo de 0 a 1. A altura do hero fica no CSS: `.hero { height: 300svh }` (220svh no celular).
+**Texto do hero:** *"O feed não para. Seu público, sim."*, com o subtítulo *"Vídeos feitos no celular que fazem as pessoas parar / olhar / lembrar / comprar."* A palavra final se alterna (`.cycle` em `index.html`; `heroCycle()` em `main.js`) e o olho dá uma olhadinha para o texto a cada troca.
 
 **Roteiro do mergulho** (em `index.html`, `.hero__story` e `.viewfinder`):
 1. Nos olhos: *"Antes de qualquer câmera, existe um olhar."*
 2. Na íris, onde a câmera desacelera: *"É nos detalhes que o público para."*
 3. Dentro da pupila, a escuridão vira o visor de uma câmera gravando (REC, cronômetro e foco): *"Do meu olhar para o seu feed."*
 
-Sem WebGL, entra a mesma foto em CSS (`.fb-face`), com zoom a partir do olho. Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
+Sem WebGL, entra um olho em CSS (`.fb-eye`) com o mesmo mergulho. Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
 
 ## Qualidade
 
