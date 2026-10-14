@@ -33,7 +33,9 @@ Depois é só abrir `http://localhost:5173`. Não abra o `index.html` direto do 
 
 É um site estático, sem etapa de build. Funciona em Vercel, Netlify, Hostinger ou GitHub Pages. Basta apontar a hospedagem para a raiz do repositório.
 
-Depois de publicar, troque `content="assets/img/og.jpg"` no `index.html` pela URL absoluta da imagem (ex.: `https://seudominio.com/assets/img/og.jpg`), para a prévia aparecer certinho no WhatsApp e no Instagram.
+**No ar:** https://carlosserra-a11y.github.io/ingrid-market/ (GitHub Pages, publica sozinho a cada push na `main`).
+
+Se mudar de domínio, atualize `og:url` e `og:image` no `index.html` com o novo endereço, para a prévia aparecer certinho no WhatsApp e no Instagram.
 
 ## Como editar
 
@@ -89,5 +91,4 @@ Sem WebGL, entra um olho em CSS com o mesmo zoom. Com `prefers-reduced-motion`, 
 - [ ] **[CONFIRMAR]** Cidade e região de atendimento presencial. Hoje o texto diz "Santa Catarina" (Sobre e FAQ).
 - [ ] **[CONFIRMAR]** Respostas do FAQ (prazo, tráfego pago, preço) no tom da Ingrid.
 - [ ] **[PREENCHER]** Depoimentos reais em `TESTIMONIALS`.
-- [ ] **[PREENCHER]** URL absoluta do `og:image` depois de publicar.
 - [ ] **[OPCIONAL]** `formEndpoint` para guardar os leads também numa planilha ou CRM.
