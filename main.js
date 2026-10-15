@@ -79,7 +79,7 @@
   }
 
   /* ========================================================================
-     HERO EM WEBGL: olho cartoon com delineado Cleópatra, desenhado por código
+     HERO EM WEBGL: olho semi-realista com delineado Cleópatra, desenhado por código
      ======================================================================== */
   // Estilo do olho (cores em RGB, de 0 a 1). O painel "✦" do hero troca a íris, a sombra e a maquiagem.
   const EYE_STYLE = {
@@ -120,26 +120,41 @@ const vec3 BG=vec3(0.027,0.043,0.086);
 const float R=${IRIS_R.toFixed(3)};
 const vec2 LOOK=vec2(${LOOK.x.toFixed(3)},${LOOK.y.toFixed(3)});
 const vec2 WING=vec2(${WING.x.toFixed(3)},${WING.y.toFixed(3)});
-/* paleta fixa: pele (no tom da Ingrid), traço, delineado, sobrancelha e esclera */
-const vec3 SKIN=vec3(0.81,0.57,0.46);
-const vec3 SKIN_SH=vec3(0.62,0.38,0.33);
-const vec3 SKIN_HI=vec3(0.92,0.72,0.6);
-const vec3 INK=vec3(0.24,0.12,0.09);
-const vec3 LINER=vec3(0.035,0.025,0.035);
-const vec3 BROW=vec3(0.17,0.1,0.07);
-const vec3 SCLERA=vec3(0.95,0.925,0.89);
-const vec3 SCLERA_SH=vec3(0.78,0.72,0.77);
+/* paleta fixa: pele (no tom da Ingrid), linha dos cílios, delineado, cílios, sobrancelha e esclera */
+const vec3 SKIN=vec3(0.8,0.56,0.45);
+const vec3 SKIN_DEEP=vec3(0.56,0.33,0.27);
+const vec3 LASHLINE=vec3(0.13,0.075,0.06);
+const vec3 LINER=vec3(0.028,0.02,0.024);
+const vec3 LASH=vec3(0.022,0.016,0.015);
+const vec3 BROW=vec3(0.15,0.095,0.068);
+const vec3 SCLERA=vec3(0.95,0.92,0.88);
 const vec3 GOLD=vec3(1.0,0.84,0.54);
+/* luz principal no alto à esquerda (uma janela grande) e um rebatedor frio embaixo à direita */
+const vec3 LK=vec3(-0.45,0.6,0.66);
+const vec3 LF=vec3(0.6,-0.3,0.74);
+const vec3 HV=vec3(-0.25,0.33,0.91);
 ${HASH}
 float inv(float a,float b,float x){return 1.0-smoothstep(a,b,x);}
 /* 1 dentro da faixa [a,b], com borda suave de largura aa */
 float band(float x,float a,float b,float aa){return smoothstep(a-aa,a+aa,x)*inv(b-aa,b+aa,x);}
-/* traço de tinta: 1 onde a distância d é menor que a meia-largura w (borda de um pixel) */
+/* traço: 1 onde a distância d é menor que a meia-largura w (borda de um pixel) */
 float ink(float d,float w,float aa){return inv(w-aa,w+aa,d);}
 float dot2(vec2 v){return dot(v,v);}
 vec2 rot(vec2 v,float a){float c=cos(a);float s=sin(a);return vec2(c*v.x-s*v.y,s*v.x+c*v.y);}
 float smax(float a,float b,float k){float h=max(k-abs(a-b),0.0)/k;return max(a,b)+h*h*k*0.25;}
 float sdSeg(vec2 p,vec2 a,vec2 b,out float h){vec2 pa=p-a;vec2 ba=b-a;h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);return length(pa-ba*h);}
+float noise(vec2 x){vec2 i=floor(x);vec2 f=fract(x);vec2 u=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),u.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),u.x),u.y);}
+float fbm3(vec2 x){float v=0.0;float a=0.5;for(int i=0;i<3;i++){v+=a*noise(x);x=x*2.03+vec2(1.7,9.2);a*=0.5;}return v/0.875;}
+/* ruído que se repete em x a cada 'per' células (dá a volta na íris sem emenda) */
+float pnoise(vec2 x,float per){vec2 i=floor(x);vec2 f=fract(x);vec2 u=f*f*(3.0-2.0*f);
+  float i0=mod(i.x,per);float i1=mod(i.x+1.0,per);
+  return mix(mix(hash(vec2(i0,i.y)),hash(vec2(i1,i.y)),u.x),mix(hash(vec2(i0,i.y+1.0)),hash(vec2(i1,i.y+1.0)),u.x),u.y);}
+/* fbm periódico com nível de detalhe contínuo: novas oitavas surgem suavemente com o zoom */
+float pfbm(vec2 x,float per,float oct){float v=0.0;float a=0.5;float n=0.0;
+  for(int k=0;k<8;k++){float w=clamp(oct-float(k),0.0,1.0);if(w<=0.0)break;
+    v+=a*w*pnoise(x,per);n+=a*w;x*=2.0;x.y+=17.31;per*=2.0;a*=0.5;}
+  return n>0.0?v/n:0.5;}
 /* distância até uma curva de Bézier quadrática (x) e a posição na curva, de 0 a 1 (y) */
 vec2 sdBez(vec2 pos,vec2 A,vec2 B,vec2 C){
   vec2 a=B-A;vec2 b=A-2.0*B+C;vec2 c=a*2.0;vec2 d=A-pos;
@@ -168,13 +183,6 @@ vec2 sdBez(vec2 pos,vec2 A,vec2 B,vec2 C){
   }
   return vec2(sqrt(res),t);
 }
-/* estrelinha ✦: astroide de quatro pontas */
-float star(vec2 p,float r,float aa){
-  if(r<0.0005)return 0.0;
-  vec2 a=abs(p)/r;
-  float k=aa/r*1.5;
-  return inv(1.0-k,1.0+k,sqrt(a.x)+sqrt(a.y));
-}
 
 /* pálpebras abertas: amêndoa com o canto externo erguido (x = -1 canto interno, 1 canto externo) */
 void lidsOpen(float x,out float top,out float bot){
@@ -193,131 +201,221 @@ void lids(float x,out float top,out float bot){
 }
 /* espessura do delineado: em cima (fino no canto interno, grosso no externo) e embaixo */
 float thUp(float x){
-  float nat=0.011*(0.55+0.45*clamp(1.0-x*x,0.0,1.0));
-  return mix(nat,mix(0.007,0.036,smoothstep(-0.9,0.8,x)),uMakeup);
+  float nat=0.009*(0.55+0.45*clamp(1.0-x*x,0.0,1.0));
+  return mix(nat,mix(0.007,0.034,smoothstep(-0.9,0.8,x)),uMakeup);
 }
-float thLow(float x){return 0.0035+0.012*smoothstep(0.0,0.85,x)*uMakeup;}
+float thLow(float x){return 0.003+0.01*smoothstep(0.0,0.85,x)*uMakeup;}
+/* vinco da pálpebra: fica parado quando o olho fecha (a pálpebra estica e leva a sombra junto) */
+float creaseY(float x){
+  float k=1.0-x*x/1.49;
+  float axc=0.5*(k+sqrt(k*k+0.004)); // sem quina onde o vinco termina (a luz não quebra ali)
+  return 0.06+0.06*x+0.53*pow(axc,0.85)*(1.0-0.12*x)+uLook.y*0.04*axc;
+}
 
-/* raios da íris: traços que saem da pupila, cada um com comprimento e espessura próprios */
-float spokes(float t,float u,float r,float n,float seed,float u0,float len,float w,float aa){
-  float a=t*n;
-  float id=mod(floor(a),n);
-  float h=hash(vec2(id,seed));float h2=hash(vec2(id,seed+3.7));
-  float off=fract(a)-0.5-(h-0.5)*0.55;
-  float d=abs(off)/n*6.2831853*r;
-  float s0=u0+0.1*h2;
-  float s1=min(s0+len*(0.5+0.5*h),0.97);
-  float k=clamp((u-s0)/max(s1-s0,0.001),0.0,1.0);
-  float ww=w*(0.65+0.7*h2)*(1.0-0.8*k);
-  return ink(d,ww,aa)*smoothstep(s0-0.01,s0+0.02,u)*inv(0.82,1.0,k);
-}
-/* íris cartoon (q em unidades do raio da íris): tons em faixas, colarete dourado, raios e pintinhas.
-   Os detalhes finos aparecem conforme a câmera se aproxima (lod). */
+/* íris realista (q em unidades do raio da íris): estroma em feixes e fibras com relevo, colarete em
+   zigue-zague, criptas, sulcos de contração, sardinhas de pigmento e anel limbal. As cores vêm do
+   painel ✦ e os detalhes finos surgem conforme a câmera se aproxima (lod). */
 vec3 iris(vec2 q,float r,float pr,float lod,float aa){
   float u=clamp((r-pr)/(1.0-pr),0.0,1.0);
   float t=atan(q.y,q.x+0.000001)/6.2831853+0.5;
-  /* topo escuro, meio quente, meia-lua clara embaixo */
-  float topC=inv(-0.03,0.03,length(q-vec2(-0.1,1.2))-0.95);
-  float lowC=smoothstep(-0.03,0.03,length(q-vec2(0.08,0.55))-0.97);
-  vec3 col=mix(uIrisMid,uIrisDark,topC*0.8);
-  col=mix(col,uIrisLight,lowC*0.85);
-  col*=0.82+0.32*inv(0.1,1.0,u);
-  /* colarete: anel dourado em zigue-zague em volta da pupila */
-  float tri=abs(fract(t*19.0)-0.5)*2.0;
-  float cu=0.3+0.07*tri+0.025*(hash(vec2(mod(floor(t*19.0),19.0),4.0))-0.5);
-  vec3 gold=mix(uIrisLight,GOLD,0.35)*(1.0-0.3*topC);
-  col=mix(col,gold,inv(cu-0.012,cu+0.012,u)*0.72);
-  /* raios claros e largos, escuros e finos; mais camadas quando a câmera chega perto */
-  vec3 lite=mix(uIrisLight,vec3(1.0,0.9,0.7),0.25);
-  col=mix(col,lite,spokes(t,u,r,34.0,1.0,cu-0.02,0.5,0.022,aa)*0.5);
-  col=mix(col,uIrisDark,spokes(t,u,r,58.0,2.0,cu+0.04,0.45,0.012,aa)*0.45);
-  float d1=smoothstep(3.6,5.0,lod);
-  float d2=smoothstep(5.2,6.6,lod);
-  if(d1>0.0){
-    col=mix(col,lite,spokes(t,u,r,96.0,3.0,cu+0.06,0.4,0.006,aa)*0.42*d1);
-    col=mix(col,gold*1.1,spokes(t,u,r,72.0,4.0,0.02,cu-0.02,0.006,aa)*0.5*d1);
+  vec2 td=vec2(-q.y,q.x)/max(r,0.0001);
+  vec3 cD=uIrisDark;vec3 cM=uIrisMid;vec3 cL=uIrisLight;
+  /* as fibras saem da pupila ondulando um pouco, como fios de seda */
+  float tw=t+0.007*(pnoise(vec2(t*20.0,u*4.0),20.0)-0.5)+0.003*(pnoise(vec2(t*80.0,u*12.0+2.0),80.0)-0.5);
+  /* feixes largos, fibras claras (trabéculas) e fios bem finos */
+  float f0=pfbm(vec2(tw*40.0,u*1.7),40.0,lod);
+  float ff=pfbm(vec2(tw*150.0,u*2.6+5.0),150.0,lod-1.0);
+  float fil=pow(1.0-abs(2.0*ff-1.0),3.0);
+  float fine=pfbm(vec2(tw*224.0,u*8.0+5.0),224.0,lod-2.0);
+  /* relevo: compara as fibras com a vizinha de lado (um pixel) e ilumina pela luz do alto à esquerda */
+  float dt=1.3*aa/(6.2831853*max(r,0.25));
+  float ff1=pfbm(vec2((tw+dt)*150.0,u*2.6+5.0),150.0,lod-1.0);
+  float fil1=pow(1.0-abs(2.0*ff1-1.0),3.0);
+  float relief=clamp(-(fil1-fil)/max(dt*150.0,0.0001)*0.05*dot(td,vec2(-0.65,0.76)),-1.0,1.0);
+  /* colarete: a fronteira irregular entre a zona da pupila e o resto da íris */
+  float cu=0.33+0.07*(pnoise(vec2(t*8.0,2.0),8.0)-0.5)+0.045*(pnoise(vec2(t*29.0,5.0),29.0)-0.5)+0.015*(pnoise(vec2(t*110.0,8.0),110.0)-0.5);
+  float pz=inv(cu-0.03,cu+0.02,u);
+  /* zona ciliar: feixes escuros e médios, fibras claras por cima, escurecendo para a borda */
+  vec3 col=mix(mix(cD,cM,0.3),cM,smoothstep(0.25,0.8,f0));
+  col=mix(col,mix(cM,cL,0.62),fil*(0.5+0.25*f0));
+  col*=0.8+0.25*smoothstep(0.3,0.7,ff);
+  col=mix(col,cD,smoothstep(0.55,0.97,u)*0.45*(1.0-0.6*fil));
+  /* zona da pupila mais clara e quente (o anel dourado em volta da pupila), em raios finos */
+  vec3 inner=mix(cM,cL,0.42+0.3*fil)*(0.78+0.4*fine);
+  col=mix(col,inner,pz*0.88);
+  col=mix(col,mix(cM,cL,0.75),exp(-pow((u-cu-0.07)/0.1,2.0))*0.25*fil);
+  col*=0.88+0.2*fine;
+  /* fios claros e nítidos de perto */
+  if(lod>4.6){
+    float st=smoothstep(0.66,0.92,pnoise(vec2(tw*560.0,u*5.0+1.0),560.0))*clamp(lod-4.6,0.0,1.0);
+    col=mix(col,cL*1.05,st*0.3*inv(0.1,0.85,u));
   }
-  if(d2>0.0){
-    col=mix(col,uIrisDark,spokes(t,u,r,180.0,5.0,cu+0.1,0.35,0.003,aa)*0.4*d2);
-    col=mix(col,lite,spokes(t,u,r,240.0,6.0,cu+0.03,0.25,0.0022,aa)*0.35*d2);
+  /* criptas de Fuchs: lacunas em forma de lente, compridas no sentido dos raios, de borda clara,
+     com fibras passando por cima. Cada célula olha as vizinhas, então nenhuma cripta sai cortada. */
+  float zone=smoothstep(cu+0.005,cu+0.06,u)*inv(0.5,0.74,u)+0.6*smoothstep(0.78,0.84,u)*inv(0.89,0.95,u);
+  float hole=0.0;float rim=0.0;
+  if(zone>0.0){
+    vec2 cc=vec2(tw*24.0,u*4.0);vec2 ci=floor(cc);
+    for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
+      vec2 g=ci+vec2(float(i),float(j));
+      vec2 gk=vec2(mod(g.x,24.0),g.y);
+      if(hash(gk+31.0)>0.6)continue;
+      vec2 dv=cc-g-vec2(hash(gk+7.0),hash(gk+13.0));
+      vec2 dm=vec2(dv.x*6.2831853*r/24.0,dv.y*(1.0-pr)/4.0)/(vec2(0.034,0.085)*(0.6+0.6*hash(gk+3.0)));
+      float d=length(vec2(dm.x*(1.0+0.45*dm.y),dm.y));
+      hole=max(hole,inv(0.55,1.0,d));
+      rim=max(rim,exp(-pow((d-1.08)/0.16,2.0)));
+    }
   }
-  /* pintinhas douradas */
-  vec2 fi=vec2(mod(floor(t*30.0),30.0),floor(u*7.0));
-  if(hash(fi+11.0)<0.2&&u>0.35&&u<0.9){
-    vec2 fo=vec2((fract(t*30.0)-0.5)/30.0*6.2831853*r,(fract(u*7.0)-0.5)/7.0*(1.0-pr));
-    col=mix(col,GOLD*0.95,ink(length(fo),0.014+0.012*hash(fi+5.0),aa)*0.7);
-  }
-  /* traço da crista do colarete e anel escuro na borda */
-  col=mix(col,uIrisDark*0.7,ink(abs(u-cu)*(1.0-pr)/1.15,0.0045,aa)*0.55);
-  col=mix(col,uIrisDark*0.55,smoothstep(0.8,0.93,u));
-  /* pupila: franja escura em volta, borda nítida e um reflexo azulado no fundo */
-  col=mix(col,uIrisDark*0.5,ink(r-pr,0.025,aa)*0.8);
-  vec3 pc=vec3(0.03,0.025,0.045)+vec3(0.05,0.05,0.1)*smoothstep(0.3,1.0,-q.y/pr)*smoothstep(0.0,1.0,r/pr);
-  return mix(col,pc,inv(pr-aa,pr+aa,r));
+  col=mix(col,col*0.4+cD*0.08,hole*zone*(1.0-0.5*fil));
+  col+=cL*0.12*rim*(1.0-hole)*zone;
+  /* crista do colarete, clara, com a sombra caindo para fora */
+  float ridge=exp(-pow((u-cu)/0.02,2.0));
+  col=mix(col,mix(cM,cL,0.8),ridge*0.4*(0.5+0.5*pnoise(vec2(t*34.0,6.0),34.0)));
+  col*=1.0-0.14*exp(-pow((u-cu-0.035)/0.022,2.0));
+  /* sulcos de contração: arcos curtos e macios na periferia */
+  float fur=0.0;
+  for(int i=0;i<3;i++){float fi=float(i);
+    float uc=0.64+0.1*fi+0.04*(pnoise(vec2(t*12.0,fi*5.0+1.0),12.0)-0.5);
+    fur+=exp(-pow((u-uc)/0.03,2.0))*smoothstep(0.45,0.75,pnoise(vec2(t*7.0,fi*3.0),7.0));}
+  col*=1.0-0.12*clamp(fur,0.0,1.0);
+  /* sardinhas de pigmento, raras e de borda macia */
+  float frk=smoothstep(0.86,0.94,pnoise(vec2(t*22.0,u*7.0+13.0),22.0))*band(u,0.32,0.84,0.06);
+  col=mix(col,cD*0.55,frk*0.6);
+  col*=1.0+0.45*relief;
+  /* anel limbal escuro e esfumado, franja escura e enrugada em volta da pupila */
+  col=mix(col,cD*0.32,smoothstep(0.76,0.98,u+0.04*(fine-0.5))*0.88);
+  float ruff=0.03+0.022*pnoise(vec2(t*90.0,1.0),90.0);
+  col=mix(col,cD*0.3,inv(0.0,ruff,u)*0.9);
+  /* a íris é côncava: afunda perto da pupila e da borda */
+  col*=0.84+0.16*smoothstep(0.0,0.3,u)*inv(0.72,1.0,u);
+  /* pupila funda, com borda nítida em qualquer zoom */
+  float pe=pr*(1.0+0.014*(pnoise(vec2(t*36.0,3.0),36.0)-0.5));
+  vec3 pc=vec3(0.006,0.005,0.008)+vec3(0.03,0.016,0.018)*smoothstep(0.25,1.0,r/pe)*smoothstep(-0.2,1.0,-q.y/pe);
+  return mix(col,pc,inv(pe-aa*1.2,pe+aa*1.2,r));
 }
 
-/* sobrancelha: cheia, arqueada e afinando na ponta; o começo é feito de fios */
+/* relevo da pele em volta do olho (altura), usado para iluminar em 3D */
+float skinH(vec2 e,float top,float bot,float aa){
+  float x=e.x;float ax=clamp(1.0-x*x,0.0,1.0);
+  float du=e.y-top;float dl=bot-e.y;
+  float cr=creaseY(x);
+  float h=0.0;
+  /* osso da sobrancelha, maçã do rosto e a órbita mais funda */
+  h+=0.2*exp(-pow((e.y-1.02)/0.3,2.0))*inv(0.9,1.8,abs(x+0.05));
+  h+=0.12*exp(-pow((e.y+1.0)/0.35,2.0))*smoothstep(-0.9,0.5,x);
+  h-=0.13*exp(-dot(e*vec2(0.8,1.35),e*vec2(0.8,1.35)));
+  /* pálpebra de cima: abaulada sobre o globo, entrando na dobra do vinco */
+  float lidS=du/max(cr-top,0.03);
+  float lidX=smoothstep(-1.1,-0.7,x)*inv(1.0,1.3,x);
+  h+=0.032*smoothstep(0.0,0.3,lidS)*inv(0.55,1.0,lidS)*step(0.0,du)*lidX;
+  h-=0.024*exp(-pow((e.y-cr)/0.03,2.0))*lidX;
+  h+=0.026*exp(-pow((e.y-cr-0.08)/0.06,2.0))*lidX;
+  /* pálpebra de baixo: um rolinho logo abaixo dos cílios e a olheira mais funda */
+  h+=0.018*exp(-pow((dl-0.05)/0.035,2.0))*ax*step(0.0,dl);
+  h-=0.03*exp(-pow((dl-0.22)/0.08,2.0))*inv(-0.2,1.0,x)*step(0.0,dl);
+  /* textura: poros e linhas finas, só quando a resolução comporta */
+  float near=inv(0.0016,0.0045,aa);
+  h+=(0.0002+0.0003*exp(-dot(e,e)*1.5))*fbm3(e*90.0);
+  h+=0.0002*noise(e*420.0)*near;
+  h+=0.00025*(noise(vec2(x*9.0,du*160.0))-0.5)*smoothstep(0.02,0.06,du)*inv(cr-top-0.02,cr-top,du)*ax*near;
+  vec2 cf=e-vec2(1.05,0.0);
+  h+=0.0004*sin(atan(cf.y,cf.x)*26.0+noise(e*20.0)*3.0)*smoothstep(0.08,0.25,length(cf))*inv(0.3,0.55,length(cf))*step(0.0,cf.x+0.15)*near;
+  return h;
+}
+
+/* sobrancelha: cheia e arqueada, desenhada fio a fio na direção natural dos pelos */
 float browY(float x){
   return 0.86+0.2*exp(-pow((x-0.42)/0.52,2.0))-0.17*smoothstep(0.65,1.4,x)+0.03*smoothstep(-1.2,-0.7,x)
     +uBrow*0.075*(0.5+0.5*smoothstep(-1.0,0.6,x))+uLook.y*0.02;
 }
 float brow(vec2 e,float aa){
   float x=e.x;
-  float th=0.042*pow(inv(-1.05,1.42,x),0.55)+0.004;
-  float m=ink(abs(e.y-browY(x)+0.012*inv(-1.15,-0.75,x)),th,aa*1.3)*smoothstep(-1.24,-1.12,x)*inv(1.34,1.4,x);
+  float th=0.068*pow(inv(-1.05,1.42,x),0.55)+0.01;
+  float dy=e.y-browY(x)+0.012*inv(-1.15,-0.75,x);
+  float m=inv(th*0.45,th*0.45+0.04,abs(dy))*smoothstep(-1.26,-1.02,x)*inv(1.26,1.42,x);
   if(m<=0.0)return 0.0;
-  vec2 hp=rot(e,-1.1);
-  float hair=ink(abs(fract(hp.x*70.0)-0.5),0.22,0.12);
-  return m*(1.0-inv(-1.08,-0.72,x)*0.55*(1.0-hair));
+  /* os pelos sobem no começo, deitam no meio e descem na ponta */
+  float ang=mix(1.25,0.3,smoothstep(-1.05,-0.5,x))-0.5*smoothstep(0.5,1.2,x);
+  vec2 hp=rot(e,-ang);
+  float cw=0.0052;float cl=0.09;
+  float cov=0.0;
+  for(int k=-1;k<=1;k++){
+    float j=floor(hp.y/cw)+float(k);
+    float sh=hash(vec2(j,3.0));
+    float row=floor(hp.x/cl+sh);
+    float h1=hash(vec2(j,row));float h2=hash(vec2(j,row+7.0));float h3=hash(vec2(j,row+13.0));
+    float t=(hp.x/cl+sh-row-0.5*(0.45-0.4*h1))/(0.55+0.4*h1);
+    if(t<0.0||t>1.0)continue;
+    float off=(j+0.5+(h2-0.5)*0.8)*cw+(h3-0.5)*0.014*t*t;
+    float w=0.003*(1.0-0.7*t)+aa*0.5;
+    cov=max(cov,inv(w*0.5,w*0.5+aa,abs(hp.y-off))*(0.55+0.45*h1)*step(0.2,h3+0.4*m));
+  }
+  /* fios por cima de uma base macia, como sobrancelha penteada e preenchida de leve */
+  return clamp(cov*m*0.85+m*0.42,0.0,1.0);
 }
 
-/* pele em faixas de luz (cel shading), maquiagem leve, traço do vinco e sobrancelha */
-vec3 skin(vec2 e,float top,float bot,float aa){
+/* pele com relevo e luz (difusa macia, um toque de subsurface e brilho úmido), maquiagem leve e sobrancelha.
+   Devolve também a normal e a luz local, para o delineado brilhar no mesmo lugar. */
+vec3 skin(vec2 e,float top,float bot,float aa,out vec3 n,out float key){
   float x=e.x;
   float ax=clamp(1.0-x*x,0.0,1.0);
   float du=e.y-top;
   float dl=bot-e.y;
-  /* o vinco é uma curva suave que fica parada quando o olho fecha: a pálpebra estica e leva a sombra junto */
-  float axc=clamp(1.0-x*x/1.49,0.0,1.0);
-  float crease=0.06+0.06*x+0.53*pow(axc,0.85)*(1.0-0.12*x)+uLook.y*0.04*axc;
-  float s=du/max(crease-top,0.03);
+  float cr=creaseY(x);
+  float s=du/max(cr-top,0.03);
   float side=smoothstep(-0.98,-0.62,x);
   /* acima da linha dos cílios; depois do canto externo a borda fica macia (não há pálpebra ali) */
   float soft=mix(aa,0.05,smoothstep(0.85,1.1,x));
   float above=smoothstep(-soft,soft,du);
-  vec3 c=SKIN;
-  /* volumes: luz do alto à esquerda, órbita mais funda, vinco escuro, pálpebra e osso iluminados */
-  c=mix(c,SKIN_SH,smoothstep(-0.03,0.03,0.42*x-0.3*e.y-0.66)*0.55);
-  c=mix(c,mix(SKIN,SKIN_SH,0.36),inv(0.97,1.03,length((e-vec2(0.06,0.1))*vec2(0.74,1.18))));
-  c=mix(c,SKIN_SH*0.94,band(e.y-crease,-0.008,0.085,0.02)*side*inv(1.05,1.3,x)*0.55);
-  c=mix(c,SKIN_HI,above*inv(0.25,1.0,s)*side*inv(0.9,1.05,x)*0.5);
-  c=mix(c,SKIN_HI,exp(-pow((e.y-browY(x)+0.17)/0.07,2.0))*inv(0.0,1.3,abs(x-0.2))*0.5);
-  c=mix(c,SKIN_HI,band(dl,0.0,0.03,0.008)*ax*0.4);
-  c=mix(c,SKIN_SH,band(dl,0.06,0.13,0.025)*smoothstep(-0.8,0.0,x)*inv(0.8,1.1,x)*0.22);
-  c=mix(c,SKIN_SH,smoothstep(-1.05,-1.4,x)*0.45);
-  /* maquiagem leve: blush, sombra esfumada (mais intensa no canto externo) e pontos de luz dourados */
-  vec2 bc=(e-vec2(0.72,-0.78))*vec2(1.0,1.5);
-  c=mix(c,vec3(0.9,0.48,0.45),exp(-dot(bc,bc)*7.0)*0.28*uMakeup);
-  float sh=above*inv(0.12,1.3,s)*side*inv(1.15,1.52,x);
-  float outer=smoothstep(0.25,0.95,x)*inv(0.35,1.35,s)*above;
-  vec3 shc=mix(uShadow*0.86,uShadow*1.08,smoothstep(0.0,0.9,s))*mix(1.0,0.78,outer);
-  c=mix(c,shc,clamp(sh*0.68+outer*0.22,0.0,1.0)*uMakeup);
-  c+=GOLD*0.13*exp(-pow((x+0.05)/0.34,2.0))*band(s,0.12,0.72,0.12)*above*uMakeup;
-  vec2 ic=(e-vec2(-0.92,0.02))*vec2(1.0,1.4);
-  c+=GOLD*0.22*exp(-dot(ic,ic)*260.0)*uMakeup;
-  /* glitter: estrelinhas ✦ que piscam na sombra */
-  vec2 gp=e/0.075;vec2 gi=floor(gp);float gh=hash(gi+3.1);
-  if(gh<0.45&&sh>0.05){
-    vec2 go=gi+0.5+(vec2(hash(gi+7.3),hash(gi+1.9))-0.5)*0.5;
-    float tw=pow(max(sin(uTime*(1.2+gh*2.4)+gh*40.0),0.0),8.0);
-    c=mix(c,vec3(1.0,0.96,0.88),star((gp-go)*0.075,0.022*tw,aa)*sh*uMakeup);
-  }
-  /* traço do vinco, como num desenho */
-  c=mix(c,INK,ink(abs(e.y-crease),0.0055,aa)*smoothstep(-0.88,-0.35,x)*inv(0.6,1.08,x)*0.6);
-  return mix(c,BROW,brow(e,aa));
+  /* normal pelo relevo (diferenças finitas) */
+  float eps=max(aa*1.6,0.0016);
+  float h0=skinH(e,top,bot,aa);
+  float tx;float bx;lids(x+eps,tx,bx);
+  float hx=skinH(e+vec2(eps,0.0),tx,bx,aa);
+  float hy=skinH(e+vec2(0.0,eps),top,bot,aa);
+  n=normalize(vec3(-(hx-h0)/eps,-(hy-h0)/eps,1.0));
+  key=exp(-length((e-vec2(-0.1,0.3))*vec2(0.5,0.8))*1.1);
+  /* cor da pele: variação suave de tom, região dos olhos um pouco mais funda, poros de perto */
+  vec3 alb=SKIN*(0.93+0.1*fbm3(e*4.0));
+  alb*=vec3(1.0,0.97+0.05*fbm3(e*9.0+4.0),0.96+0.06*fbm3(e*7.0+1.0));
+  float peri=exp(-dot(e*vec2(0.75,1.5),e*vec2(0.75,1.5))*1.4);
+  alb=mix(alb,SKIN_DEEP,peri*0.28);
+  alb=mix(alb,alb*vec3(1.05,0.9,0.88),smoothstep(0.45,0.85,fbm3(e*5.0+2.0))*0.4);
+  alb*=1.0-0.025*smoothstep(0.66,0.94,noise(e*170.0))*inv(0.0018,0.004,aa);
+  /* olheira levemente arroxeada e pálpebra um pouco mais rosada */
+  alb=mix(alb,alb*vec3(0.86,0.8,0.86),exp(-pow((dl-0.14)/0.08,2.0))*step(0.0,dl)*smoothstep(-0.9,0.1,x)*inv(0.6,1.1,x)*0.5);
+  alb=mix(alb,alb*vec3(1.04,0.9,0.88),above*inv(0.0,1.0,s)*side*0.35);
+  /* maquiagem leve: sombra esfumada (clara na pálpebra, mais funda no vinco e no canto externo) */
+  float sh=above*inv(0.1,1.3,s)*side*inv(1.1,1.5,x);
+  float outer=smoothstep(0.2,0.95,x)*inv(0.3,1.4,s)*above;
+  vec3 shc=mix(uShadow*1.1,uShadow*0.92,smoothstep(0.1,0.9,s));
+  shc=mix(shc,uShadow*vec3(0.62,0.5,0.48),outer*0.75);
+  alb=mix(alb,shc,clamp(sh*0.5+outer*0.22,0.0,1.0)*uMakeup);
+  /* luz: difusa enrolada (pele translúcida), rebatedor frio, oclusão nas dobras */
+  float dk=clamp((dot(n,LK)+0.3)/1.3,0.0,1.0);
+  float df=clamp(dot(n,LF),0.0,1.0);
+  float ao=clamp(0.84+h0*1.8,0.5,1.05);
+  vec3 c=alb*(dk*vec3(1.0,0.93,0.86)*(0.42+0.88*key)+df*vec3(0.13,0.15,0.21)+0.08);
+  c+=alb*vec3(0.32,0.07,0.04)*dk*(1.0-dk)*1.5*key;
+  c*=ao;
+  /* sombra suave que a pálpebra e os cílios projetam logo acima/abaixo do olho */
+  c*=1.0-0.18*exp(-pow((dl-0.012)/0.03,2.0))*step(0.0,dl)*ax;
+  /* brilho úmido (pálpebra e osso da sobrancelha) e cintilância fina da sombra */
+  float sp=pow(max(dot(n,HV),0.0),26.0);
+  c+=vec3(1.0,0.92,0.84)*sp*(0.07+0.28*sh*uMakeup)*(0.6+0.6*noise(e*40.0))*key;
+  vec2 gc=floor(e/max(aa*1.5,0.0016));
+  float glint=smoothstep(0.982,1.0,hash(gc))*(0.55+0.45*sin(uTime*2.2+hash(gc+4.0)*40.0));
+  c+=vec3(1.0,0.93,0.82)*glint*sh*inv(0.05,0.9,s)*(0.25+sp*2.0)*0.8*key*uMakeup;
+  /* iluminador: canto interno e logo abaixo da sobrancelha */
+  vec2 ic=(e-vec2(-0.92,0.03))*vec2(1.0,1.4);
+  c+=GOLD*0.1*exp(-dot(ic,ic)*420.0)*uMakeup;
+  c+=vec3(0.95,0.85,0.72)*0.06*exp(-pow((e.y-browY(x)+0.16)/0.07,2.0))*inv(0.0,1.2,abs(x-0.25))*key*uMakeup;
+  /* sobrancelha, levemente iluminada pela mesma luz */
+  return mix(c,BROW*(0.65+0.55*key*dk),brow(e,aa)*0.9);
 }
 
-/* globo ocular: esclera, carúncula, linha d'água, íris, sombra da pálpebra e brilhos */
+/* globo ocular: esclera com volume, vasinhos, carúncula úmida, íris atrás da córnea e reflexos */
 vec3 ball(vec2 e,float top,float bot,float dTop,float dBot,float aa,float lod){
   float x=e.x;
   float ax=clamp(1.0-x*x,0.0,1.0);
@@ -325,45 +423,82 @@ vec3 ball(vec2 e,float top,float bot,float dTop,float dBot,float aa,float lod){
   vec2 q=(e-ic)/R;
   float r=length(q);
   float aaR=aa/R;
-  /* esclera creme, com volume em faixas suaves */
-  float rr=length((e-ic*0.4)*vec2(0.88,1.45));
-  vec3 b=mix(SCLERA,SCLERA*vec3(0.95,0.93,0.96),smoothstep(0.6,0.66,rr));
-  b=mix(b,SCLERA_SH,smoothstep(0.84,0.94,rr)*0.75);
-  /* carúncula: o cantinho rosado de dentro */
+  /* esfera iluminada pela luz principal: o branco do olho nunca é branco chapado */
+  vec2 nb=(e-ic*0.6)/1.3;
+  vec3 nrm=vec3(nb,sqrt(max(0.0,1.0-dot(nb,nb))));
+  float dif=clamp(dot(nrm,LK)*0.55+0.45,0.0,1.0);
+  vec3 b=SCLERA*(0.5+0.56*dif);
+  b*=vec3(1.0,0.985+0.03*fbm3(e*6.0),0.965+0.05*fbm3(e*5.0+7.0));
+  b=mix(b,b*vec3(1.0,0.84,0.82),smoothstep(0.5,0.98,abs(x))*0.45);
+  /* vasinhos bem discretos perto dos cantos */
+  float v1=abs(noise(e*vec2(7.0,11.0)+3.0)-0.5);
+  float v2=abs(noise(e*vec2(19.0,27.0)+11.0)-0.5);
+  float vein=(inv(0.0,0.009+aa*3.0,v1)+0.5*inv(0.0,0.006+aa*3.0,v2))*smoothstep(0.62,0.95,abs(x))*smoothstep(1.35,1.75,r);
+  b=mix(b,vec3(0.8,0.36,0.36)*(0.5+0.5*dif),clamp(vein,0.0,1.0)*0.16);
+  /* carúncula: o cantinho rosado e úmido de dentro, com a dobrinha ao lado */
   float mid=0.5*(top+bot);
   float cb=x+0.845-2.6*(e.y-mid)*(e.y-mid);
-  b=mix(b,vec3(0.93,0.57,0.56),inv(-aa,aa,cb));
-  b=mix(b,vec3(0.66,0.3,0.3),ink(abs(cb),0.0035,aa)*0.5);
-  b+=vec3(0.3)*inv(0.0,0.011+aa,length(e-vec2(-0.915,mid+0.012)));
-  /* linha d'água rosada, com um fio de brilho */
-  b=mix(b,vec3(0.95,0.73,0.69),band(dBot,-0.01,0.016,aa)*smoothstep(0.0,0.12,ax));
-  b=mix(b,vec3(1.0),ink(abs(dBot-0.02),0.0022,aa)*smoothstep(0.05,0.4,ax)*0.5*step(0.5,hash(vec2(floor(x*14.0),2.0))));
-  /* íris com contorno */
-  float pr=max(0.36+0.01*sin(uTime*1.3)+0.006*sin(uTime*2.7+1.0)+0.22*uDilate,0.18);
-  if(r<1.06){
-    b=mix(b,iris(q,r,pr,lod,aaR),inv(1.0-aaR,1.0+aaR,r));
-    b=mix(b,uIrisDark*0.4,ink(abs(r-0.99),0.012,aaR));
+  b=mix(b,b*vec3(1.0,0.86,0.86),band(cb,0.0,0.06,0.025)*0.7);
+  b=mix(b,vec3(0.84,0.48,0.47)*(0.85+0.15*noise(e*40.0))*(0.6+0.5*dif),inv(-aa*1.5,aa*1.5,cb));
+  b+=vec3(0.4)*inv(0.0,0.01+aa,length(e-vec2(-0.912,mid+0.012)));
+  b+=vec3(0.15)*smoothstep(0.75,0.95,noise(e*90.0+3.0))*inv(0.0,0.02,cb+0.06)*smoothstep(-0.12,-0.04,cb+0.06);
+  /* íris atrás da córnea */
+  float pr=max(0.34+0.008*sin(uTime*1.3)+0.005*sin(uTime*2.7+1.0)+0.22*uDilate,0.16);
+  if(r<1.12){
+    vec3 ir=iris(q,r,pr,lod,aaR);
+    /* a córnea concentra luz no lado da íris oposto à fonte (cáustica) */
+    float caus=smoothstep(0.0,0.9,dot(q,vec2(0.62,-0.62)))*smoothstep(0.3,0.95,r)*inv(0.9,1.0,r);
+    ir*=(0.8+0.3*dif)*(1.0+vec3(0.5,0.36,0.2)*caus);
+    /* borda da íris macia, como na vida real, com uma névoa cinza logo fora */
+    b=mix(b,ir,inv(0.955,1.015+aaR*1.5,r));
+    b*=1.0-0.12*exp(-pow((r-1.04)/0.05,2.0));
   }
-  /* sombra da pálpebra de cima: uma faixa nítida, como num desenho animado */
-  b=mix(b,b*vec3(0.74,0.69,0.8),inv(0.075-aa,0.095,dTop));
-  b*=mix(0.84,1.0,smoothstep(0.0,0.03,dBot));
-  /* brilhos: ficam do lado da luz, não giram com o olho; uma estrelinha ✦ cintila de vez em quando */
-  vec2 hc=ic*0.85;
-  vec2 h1=rot(e-(hc+R*vec2(-0.34,0.33)),-0.55);
-  vec2 rad=R*vec2(0.2,0.14);
-  float hl=inv(-aa,aa,(length(h1/rad)-1.0)*rad.y);
-  hl=max(hl,inv(-aa,aa,length(e-(hc+R*vec2(0.33,-0.3)))-R*0.07));
-  float tw=pow(max(sin(uTime*1.1)*sin(uTime*0.43+2.0),0.0),2.0);
-  hl=max(hl,star(e-(hc+R*vec2(0.04,0.5)),R*0.15*tw,aa));
-  return mix(b,vec3(1.0,0.995,0.98),hl*smoothstep(0.0,0.025,dTop)*0.96*(1.0-0.4*smoothstep(1.8,4.0,uZoom)));
+  /* pálpebra de cima: sombra larga e macia, quente nas bordas; sombra dos cílios em fios */
+  b*=mix(vec3(0.34,0.24,0.23),vec3(1.0),smoothstep(0.0,0.2,dTop));
+  b*=0.55+0.45*smoothstep(0.0,0.022,dTop);
+  b*=1.0-0.22*exp(-pow((dTop-0.05)/0.03,2.0))*(0.55+0.45*noise(vec2(x*45.0,1.0)));
+  /* cantos e pálpebra de baixo mais escuros */
+  b*=mix(0.7,1.0,smoothstep(0.0,0.045,dBot));
+  b*=mix(0.66,1.0,inv(0.78,1.0,abs(x)));
+  /* linha d'água rosada e o menisco de lágrima brilhando sobre ela */
+  float wl=band(dBot,-0.01,0.014,aa);
+  b=mix(b,vec3(0.82,0.55,0.52)*(0.5+0.5*dif),wl*smoothstep(0.0,0.12,ax)*0.85);
+  /* canto externo: a dobra rosada e funda onde as pálpebras se encontram */
+  b=mix(b,mix(vec3(0.4,0.22,0.21),vec3(0.2,0.1,0.1),smoothstep(0.9,1.0,x))*(0.6+0.4*dif),smoothstep(0.8,0.97,x)*0.9);
+  /* kohl na linha d'água, como no delineado egípcio: contorna o olho por dentro, mais forte no canto externo */
+  b=mix(b,vec3(0.05,0.038,0.042),max(wl,smoothstep(0.9,0.97,x))*smoothstep(0.15,0.85,x)*uMakeup*0.9);
+  b+=vec3(0.3)*exp(-pow((dBot-0.017)/(0.0025+aa),2.0))*smoothstep(0.1,0.5,ax)*inv(0.6,0.85,x)*smoothstep(0.35,0.75,noise(vec2(x*28.0,3.0)));
+  /* reflexos na córnea molhada: o ring light de quem grava, a janela do ambiente e um pontinho
+     de rebote. Ficam do lado da luz, não giram com o olho. */
+  float wet=smoothstep(0.0,0.035,dTop)*(1.0-0.45*smoothstep(1.8,4.0,uZoom));
+  /* com a câmera focada na íris, a córnea (mais à frente) sai de foco e o reflexo fica macio */
+  float macro=smoothstep(1.4,3.6,uZoom);
+  vec2 hp=(e-(ic*0.85+R*vec2(-0.36,0.38)))/R;
+  hp=rot(hp,0.2)*vec2(1.0,1.12);
+  float rr=length(hp);
+  float ring=band(rr,0.108,0.14,aaR*2.0+0.008+0.03*macro)*(0.62+0.22*smoothstep(-0.15,0.15,hp.y))*(1.0-0.35*macro);
+  float spec=ring+exp(-pow((rr-0.124)/0.05,2.0))*0.16;
+  /* janela: um retângulo suave e curvado pela córnea */
+  vec2 wp=(e-(ic*0.85+R*vec2(0.34,0.42)))/R;
+  wp=rot(wp,-0.3);wp*=1.0+1.4*dot(wp,wp);
+  vec2 wq=abs(wp)-vec2(0.12,0.07);
+  float win=inv(-0.012-aaR-0.03*macro,0.012+aaR+0.03*macro,length(max(wq,0.0))+min(max(wq.x,wq.y),0.0));
+  spec=max(spec,win*0.17*(0.6+0.4*smoothstep(-0.07,0.07,wp.y)));
+  spec=max(spec,inv(0.0,0.045+aaR,length(e-(ic*0.85+R*vec2(0.36,-0.34)))/R)*0.65);
+  /* brilho úmido largo sobre a esclera e um fio de luz na borda da córnea */
+  vec2 sw=(e-ic*0.4-vec2(-0.62,0.16))*vec2(1.0,2.2);
+  b+=vec3(0.13,0.135,0.15)*inv(0.0,0.16,length(sw))*wet;
+  b+=vec3(0.1)*exp(-pow((r-1.0)/0.025,2.0))*smoothstep(-0.2,0.6,dot(q/max(r,0.0001),vec2(-0.6,0.6)))*wet;
+  return mix(b,vec3(1.0,0.995,0.985),clamp(spec,0.0,1.0)*wet*0.95);
 }
 
-/* delineado Cleópatra: traço grosso em cima com gatinho longo, linha de baixo que se estende
-   paralela ao gatinho sem fechar com ele, e uma ponta no canto interno. Tudo preso às pálpebras. */
-vec3 liner(vec3 col,vec2 e,float top,float bot,float aa){
+/* delineado Cleópatra: traço grosso em cima com gatinho longo, linha de baixo de lápis kohl que se
+   estende paralela ao gatinho sem fechar com ele, e uma ponta no canto interno. Tudo preso às pálpebras. */
+vec3 liner(vec3 col,vec2 e,float top,float bot,float aa,vec3 n,float key){
   float x=e.x;
   float th=thUp(x);
-  float up=band(e.y-top,-0.006,th,aa)*smoothstep(-0.99,-0.92,x)*step(x,1.0);
+  float la=aa*1.25;
+  float up=band(e.y-top,-0.006,th,la)*smoothstep(-0.99,-0.92,x)*step(x,1.0);
   /* gatinho: a borda de baixo continua o canto do olho; a de cima sai da pálpebra até a ponta,
      que fica parada enquanto a pálpebra se mexe */
   float cT;float cB;lids(1.0,cT,cB);
@@ -371,84 +506,124 @@ vec3 liner(vec3 col,vec2 e,float top,float bot,float aa){
   float bT;float bB;lids(0.86,bT,bB);
   vec2 B=vec2(0.86,bT+thUp(0.86));
   vec2 T=mix(vec2(1.08,0.1),WING,uMakeup);
-  if(x>0.6&&x<T.x+aa){
+  if(x>0.6&&x<T.x+la){
     float f=clamp((x-B.x)/(T.x-B.x),0.0,1.0);
     float yU=smax(top+th,mix(B.y,T.y,(x-B.x)/(T.x-B.x))-0.12*uMakeup*f*(1.0-f),0.04);
     float yL=x<C.x?top-0.006:mix(C.y-0.006,T.y,(x-C.x)/(T.x-C.x));
     float sl=1.0+abs(T.y-C.y)/(T.x-C.x);
-    up=max(up,band(e.y,yL,yU,aa*sl)*inv(T.x-aa,T.x+aa,x));
+    up=max(up,band(e.y,yL,yU,la*sl)*inv(T.x-la,T.x+la,x));
   }
-  /* linha de baixo: fina no meio, mais marcada no canto externo */
-  float low=band(bot-e.y,-0.004,thLow(x),aa)*smoothstep(-0.97,-0.86,x)*step(x,0.995);
+  /* linha de baixo: fina no meio, mais marcada no canto externo, com a borda de lápis */
+  float low=band(bot-e.y,-0.004,thLow(x),la*1.4)*smoothstep(-0.97,-0.86,x)*step(x,0.995);
   /* rabinho de baixo: sai do canto externo paralelo ao gatinho, sem encostar nele */
   float sT;float sB;lids(0.9,sT,sB);
   vec2 S=vec2(0.9,sB-thLow(0.9)*0.5);
   float hh;
   float ds=sdSeg(e,S,S+normalize(WING-vec2(1.0,0.07))*(0.4*uMakeup+0.001),hh);
-  float tail=ink(ds,thLow(0.9)*0.55*(1.0-hh*0.9),aa)*uMakeup;
+  float tail=ink(ds,thLow(0.9)*0.55*(1.0-hh*0.9),la)*uMakeup;
   /* ponta no canto interno, apontando para o nariz */
   float iT;float iB;lids(-0.86,iT,iB);
   float hi;
   float di=sdSeg(e,vec2(-0.86,iT+0.002),vec2(-1.04,-0.11),hi);
-  float inner=ink(di,0.0075*(1.0-hi*0.85),aa)*uMakeup;
-  col=mix(col,mix(INK,LINER,uMakeup*smoothstep(-0.2,0.5,x)),low*0.92);
-  col=mix(col,LINER,max(max(up,tail),inner));
-  /* acabamento acetinado: um brilho suave ao longo do traço de cima */
-  col+=vec3(0.16,0.15,0.18)*exp(-pow((e.y-top-th*0.66)/(th*0.2+aa),2.0))*smoothstep(-0.3,0.1,x)*inv(0.5,0.8,x)*up*uMakeup;
+  float inner=ink(di,0.0075*(1.0-hi*0.85),la)*uMakeup;
+  /* esfumado: um halo marrom bem leve em volta do kohl de baixo e acima do gatinho */
+  float dl=bot-e.y;
+  float halo=exp(-pow((dl-0.008)/0.024,2.0))*smoothstep(-0.3,0.5,x)*inv(0.88,1.04,x)*smoothstep(-0.02,0.0,dl);
+  halo+=exp(-pow(ds/0.02,2.0))*0.35+exp(-pow((e.y-top-th-0.006)/0.022,2.0))*smoothstep(0.3,0.95,x)*inv(1.0,1.15,x)*0.45*step(-0.01,e.y-top);
+  col=mix(col,col*vec3(0.55,0.43,0.4),clamp(halo,0.0,1.0)*0.28*uMakeup);
+  /* textura de pigmento: o preto varia um pouquinho, como tinta sobre a pele */
+  vec3 lc=LINER*(0.85+0.3*noise(e*260.0));
+  col=mix(col,mix(LASHLINE,lc*1.4,uMakeup*smoothstep(-0.4,0.4,x)),low*0.9);
+  float cov=max(max(up,tail),inner);
+  col=mix(col,lc,cov);
+  /* acabamento acetinado: a mesma luz da pele brilha no traço */
+  float sp=pow(max(dot(n,HV),0.0),22.0);
+  col+=vec3(0.44,0.42,0.46)*sp*cov*key*0.25*uMakeup;
+  col+=vec3(0.09,0.085,0.1)*exp(-pow((e.y-top-th*0.62)/(th*0.22+aa),2.0))*smoothstep(-0.3,0.1,x)*inv(0.5,0.85,x)*up*key*uMakeup;
   return col;
 }
 
-/* um cílio: traço curvo que afina até a ponta */
-float lash(vec2 p,vec2 root,vec2 dir,vec2 side,float len,float curl,float w,float aa){
-  if(dot2(p-root)>len*len*1.3+0.0004)return 0.0;
+/* um cílio de verdade é um tufo: dois ou três fios que nascem juntos e se abrem até as pontas,
+   cada um com o seu comprimento. Fios mais finos que um pixel ficam transparentes em vez de serrilhar. */
+float lash(vec2 p,vec2 root,vec2 dir,vec2 side,float len,float curl,float w,float spread,float seed,float aa){
+  if(dot2(p-root)>len*len*1.4+0.0004)return 0.0;
   vec2 B=root+dir*len*0.5+side*len*curl*0.02;
   vec2 C=root+dir*len*0.85+side*len*curl*0.38;
   vec2 dt=sdBez(p,root,B,C);
-  return ink(dt.x,w*(1.0-0.9*pow(dt.y,1.3)),aa);
+  float t=dt.y;
+  vec2 P=mix(mix(root,B,t),mix(B,C,t),t);
+  vec2 T=mix(B-root,C-B,t);
+  vec2 v=p-P;
+  if(dt.x>spread*len*1.4*t*t+w+aa)return 0.0;
+  float sd=dt.x*(T.x*v.y-T.y*v.x<0.0?-1.0:1.0);
+  float m=aa*0.45;
+  float cov=0.0;
+  for(int i=0;i<3;i++){
+    float fi=float(i)-1.0;
+    float hl=hash(vec2(seed,fi+5.0));
+    float tm=0.72+0.28*hl;
+    float o=fi*spread*len*t*t*(0.6+0.8*hl);
+    float ww=w*(1.0-0.9*pow(clamp(t/tm,0.0,1.0),1.2))*(1.0-0.3*abs(fi));
+    cov=max(cov,ink(abs(sd-o),max(ww,m),aa)*min(1.0,ww/m)*inv(tm*0.86,tm,t));
+  }
+  return cov;
 }
 /* cílio de cima, nascendo no delineado. Aberto: sobe e abre para os lados (mais no canto externo);
    fechado: aponta para baixo, espelhado. lk/wk = escala de comprimento/espessura, da = mais em pé */
 float upLash(vec2 e,float x0,float h,float fo,float lk,float wk,float da,float aa){
   float t0;float b0;lids(x0,t0,b0);
   float k=smoothstep(-0.72,0.9,x0);
+  float len=mix(0.075,0.2,k*k)*(0.75+0.5*h)*lk;
+  vec2 root=vec2(x0,t0+thUp(x0)*0.7);
+  if(dot2(e-root)>len*len*1.4+0.0004)return 0.0;
   float sg=x0>-0.25?1.0:-1.0;
-  float aOpen=mix(1.95,0.85,k)+(h-0.5)*0.12+da*sg;
+  float aOpen=mix(1.95,0.82,k)+(h-0.5)*0.3+da*sg;
   float a=mix(sg>0.0?-aOpen:6.2831853-aOpen,aOpen,fo);
   vec2 dir=vec2(cos(a),sin(a));
   vec2 side=vec2(dir.y,-dir.x)*sg*mix(-1.0,1.0,fo);
-  float len=mix(0.08,0.21,k*k)*(0.88+0.24*h)*lk;
-  return lash(e,vec2(x0,t0+thUp(x0)*0.75),dir,side,len,1.0,mix(0.009,0.014,k)*wk,aa);
+  return lash(e,root,dir,side,len,0.8+0.4*h,mix(0.0045,0.0072,k)*wk,0.06+0.07*h,x0*91.7+lk,aa);
 }
-/* cílios: 12 grandes em cima com 11 menores entre eles, e 6 curtinhos embaixo.
+/* cílios: 24 tufos compridos em cima, 23 menores entre eles e 14 curtinhos embaixo.
    Ao piscar, os de cima giram junto com a pálpebra. */
 float lashes(vec2 e,float aa){
   float m=0.0;
   float fo=smoothstep(0.1,0.75,uOpen);
-  for(int i=0;i<12;i++){
+  for(int i=0;i<24;i++){
     float fi=float(i);
+    float x0=mix(-0.74,0.92,fi/23.0);
+    float kx=smoothstep(-0.72,0.9,x0);
+    if(abs(e.x-x0)>mix(0.075,0.2,kx*kx)*1.25+0.04)continue;
     float h=hash(vec2(fi,7.0));
-    m=max(m,upLash(e,mix(-0.72,0.9,fi/11.0)+(h-0.5)*0.04,h,fo,1.0,1.0,0.0,aa));
+    m=max(m,upLash(e,x0+(h-0.5)*0.035,h,fo,1.0,1.0,0.0,aa));
   }
-  for(int i=0;i<11;i++){
+  for(int i=0;i<23;i++){
     float fi=float(i);
+    float x0=mix(-0.74,0.92,(fi+0.5)/23.0);
+    float kx=smoothstep(-0.72,0.9,x0);
+    if(abs(e.x-x0)>mix(0.075,0.2,kx*kx)*0.83+0.04)continue;
     float h=hash(vec2(fi,23.0));
-    m=max(m,upLash(e,mix(-0.72,0.9,(fi+0.5)/11.0)+(h-0.5)*0.03,h,fo,0.6,0.72,0.14,aa));
+    m=max(m,upLash(e,x0+(h-0.5)*0.035,h,fo,0.66,0.8,0.12,aa)*0.92);
   }
-  for(int i=0;i<6;i++){
+  for(int i=0;i<14;i++){
     float fi=float(i);
+    float x0=mix(-0.3,0.93,fi/13.0);
+    if(abs(e.x-x0)>0.12)continue;
     float h=hash(vec2(fi,13.0));
-    float x0=mix(0.28,0.93,fi/5.0)+(h-0.5)*0.03;
+    x0+=(h-0.5)*0.04;
     float t0;float b0;lids(x0,t0,b0);
     float t1;float b1;lids(x0+0.01,t1,b1);
-    float k=smoothstep(0.28,0.93,x0);
-    vec2 dir=rot(-normalize(vec2(-(b1-b0),0.01)),0.35+0.5*k);
-    float len=mix(0.04,0.075,k)*(0.85+0.3*h);
-    m=max(m,lash(e,vec2(x0,b0-thLow(x0)*0.5),dir,vec2(-dir.y,dir.x),len,0.4,0.0055,aa));
+    float k=smoothstep(-0.3,0.93,x0);
+    vec2 dir=rot(-normalize(vec2(-(b1-b0),0.01)),0.3+0.55*k+(h-0.5)*0.3);
+    float len=mix(0.028,0.072,k)*(0.7+0.6*h);
+    m=max(m,lash(e,vec2(x0,b0-thLow(x0)*0.5),dir,vec2(-dir.y,dir.x),len,0.4,0.0034,0.05,fi+40.0,aa)*0.9);
   }
   return m;
 }
 
 vec3 shade(vec2 e,float px,float lod){
+  /* longe do olho tudo já virou fundo (no celular, boa parte da tela): nem calcula */
+  float fade=inv(0.9,2.3,length(e*vec2(0.6,1.0)));
+  if(fade<=0.0)return BG;
   float x=e.x;
   float ax=clamp(1.0-x*x,0.0,1.0);
   float aa=px*0.9;
@@ -457,13 +632,19 @@ vec3 shade(vec2 e,float px,float lod){
   float dBot=e.y-bot;
   float inside=smoothstep(-aa,aa,min(dTop,dBot))*smoothstep(0.0,0.02,ax);
   vec3 col=BG;
-  if(inside<1.0)col=skin(e,top,bot,aa);
+  vec3 n=vec3(0.0,0.0,1.0);
+  float key=1.0;
+  if(inside<1.0)col=skin(e,top,bot,aa,n,key);
   if(inside>0.0)col=mix(col,ball(e,top,bot,dTop,dBot,aa,lod),inside);
   if(abs(x-0.25)<1.4&&e.y<0.8&&e.y>-0.55){
-    col=liner(col,e,top,bot,aa);
-    col=mix(col,LINER,lashes(e,aa));
+    col=liner(col,e,top,bot,aa,n,key);
+    /* só calcula os cílios onde eles alcançam: perto das pálpebras e, com o olho aberto,
+       fora do meio do globo (os de cima sobem, os de baixo descem) */
+    float lo=uOpen<0.97?min(bot-0.12,top-0.3):bot-0.12;
+    if(e.y<top+0.33&&e.y>lo&&(uOpen<0.97||dTop<0.04||dBot<0.03))
+      col=mix(col,LASH*(0.8+0.4*key),lashes(e,aa));
   }
-  return mix(BG,col,inv(0.9,2.3,length(e*vec2(0.6,1.0))));
+  return mix(BG,col,fade);
 }
 
 void main(){
@@ -480,12 +661,13 @@ void main(){
   float px=1.0/(uRes.y*uScale*uZoom);
   float lod=clamp(log2(6.2831853*R/(px*3.0*64.0))+1.0,1.0,uMaxOct);
   vec3 col=shade(e,px,lod);
-  float rpd=length(e-ic)/(R*(0.36+0.22*uDilate));
+  float rpd=length(e-ic)/(R*(0.34+0.22*uDilate));
   col=mix(col,vec3(0.008,0.010,0.018),inv(0.5,1.15,rpd)*uDeep);
-  /* gradação leve: sombras um pouco frias, realces quentes */
+  /* gradação cinematográfica: sombras levemente frias, realces quentes */
   float l=dot(col,vec3(0.299,0.587,0.114));
-  col=mix(col,col*vec3(0.92,0.97,1.08),inv(0.05,0.35,l)*0.5);
-  col=mix(col,col*vec3(1.03,1.0,0.97),smoothstep(0.5,0.9,l)*0.4);
+  col=max(mix(vec3(l),col,1.08),0.0);
+  col=mix(col,col*vec3(0.91,0.97,1.08),inv(0.05,0.35,l)*0.55);
+  col=mix(col,col*vec3(1.04,1.0,0.96),smoothstep(0.5,0.9,l)*0.45);
   gl_FragColor=vec4(col,1.0);
 }`;
 
@@ -736,8 +918,9 @@ void main(){
       const gl = this.gl;
       const w = this.canvas.clientWidth || window.innerWidth;
       const h = this.canvas.clientHeight || window.innerHeight;
-      // o traço cartoon é mais leve que o olho realista, então dá para desenhar com mais pixels
-      const maxPixels = this.mobile ? 1300000 : 3200000;
+      // o olho semi-realista (íris em fibras, pele com relevo) pede um teto de pixels mais baixo;
+      // a qualidade adaptativa do loop ainda reduz mais se o aparelho não acompanhar
+      const maxPixels = this.mobile ? 1000000 : 2300000;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const scale = Math.min(dpr, Math.sqrt(maxPixels / (w * h))) * this.quality;
       const W = Math.max(2, Math.round(w * scale));

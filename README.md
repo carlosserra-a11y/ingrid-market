@@ -40,11 +40,11 @@ Landing page da **Ingrid Lima**, vídeomaker mobile, social media e gestora de t
 
 Site de página única, estático e sem etapa de build, feito para apresentar o trabalho da Ingrid e transformar visitantes em contatos no WhatsApp.
 
-O destaque é o **hero**: um olho cartoon castanho, com maquiagem leve e delineado estilo Cleópatra, desenhado inteiramente por código em WebGL, ocupa o fundo da página. Ele segue o mouse (ou o dedo), pisca, reage ao clique e até fica com sono. Conforme a pessoa rola, a câmera mergulha na íris até entrar na pupila, onde a escuridão vira o visor de uma câmera gravando. A narrativa visual conecta o olhar da Ingrid ao feed do cliente.
+O destaque é o **hero**: um olho castanho semi-realista, com maquiagem leve e delineado estilo Cleópatra, desenhado inteiramente por código em WebGL, ocupa o fundo da página. Ele segue o mouse (ou o dedo), pisca, reage ao clique e até fica com sono. Conforme a pessoa rola, a câmera mergulha na íris até entrar na pupila, onde a escuridão vira o visor de uma câmera gravando. A narrativa visual conecta o olhar da Ingrid ao feed do cliente.
 
 ## Destaques
 
-- 👁️ **Olho cartoon em WebGL**: nenhuma imagem, só shader, com traço vetorial nítido em qualquer tela e em qualquer zoom. Delineado Cleópatra, sombra esfumada com glitter ✦ e cílios desenhados fio a fio.
+- 👁️ **Olho semi-realista em WebGL**: nenhuma imagem, só shader, nítido em qualquer tela e em qualquer zoom. Íris com fibras, criptas e relevo de verdade, pele iluminada em 3D, delineado Cleópatra, sombra esfumada acetinada e cílios em tufos, fio a fio.
 - ✨ **Interativo**: segue o mouse e o dedo, pisca sozinho, arregala ou dá uma piscadinha no clique, semicerra com o mouse rápido, olha em volta quando ninguém mexe e cochila depois de um tempo. O painel **"✦ Brinque com o olhar"** troca a cor da íris e da sombra e liga/desliga a maquiagem.
 - 🎬 **Mergulho guiado pela rolagem**, com três momentos de texto e um visor de câmera (REC, cronômetro e foco) dentro da pupila.
 - 📱 **Portfólio em vídeo vertical**: 9 vídeos que tocam sem som ao aparecer na tela, com player em tela cheia para assistir com som.
@@ -180,7 +180,8 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 | --- | --- |
 | Cores da íris e da sombra, maquiagem inicial | Objeto `EYE_STYLE`, no começo da seção do olho no `main.js`. O painel ✦ é montado a partir dele |
 | Esconder o painel "✦ Brinque com o olhar" | `EYE_STYLE.kit = false` |
-| Tom da pele, traço, delineado, sobrancelha e esclera | Constantes `SKIN`, `SKIN_SH`, `SKIN_HI`, `INK`, `LINER`, `BROW` e `SCLERA`, no topo do `EYE_FRAG` |
+| Tom da pele, delineado, cílios, sobrancelha e esclera | Constantes `SKIN`, `SKIN_DEEP`, `LASHLINE`, `LINER`, `LASH`, `BROW` e `SCLERA`, no topo do `EYE_FRAG` |
+| Direção da luz | `LK` (luz principal, do alto à esquerda), `LF` (rebatedor) e `HV` (brilho), no topo do `EYE_FRAG` |
 | Ponta do gatinho | `WING` (posição) e `thUp()` (espessura do traço de cima) |
 | Tamanho da íris e quanto ela anda | `IRIS_R` e `LOOK` |
 | Posição e tamanho | Método `layout()` da classe `Eye` |
@@ -191,13 +192,16 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 <details>
 <summary><strong>Todos os detalhes do olho</strong></summary>
 
-- **Estilo cartoon:** formas limpas, contornos de espessura variável e sombreamento em faixas (cel shading). Tudo é calculado como forma vetorial, então o traço continua nítido em tela retina e no zoom do mergulho.
-- **Íris** (`iris()`): topo escuro, meia-lua clara embaixo, colarete dourado em zigue-zague, raios claros e escuros, pintinhas douradas, anel escuro na borda e pupila de borda nítida. Novas camadas de raios aparecem conforme a câmera se aproxima.
-- **Brilhos:** um oval grande e um pontinho do lado oposto, que ficam do lado da luz e não giram com o olho, e uma estrelinha ✦ que cintila de vez em quando.
+- **Estilo semi-realista:** mantém o formato expressivo do olho e o delineado gráfico, mas com luz, textura e profundidade de verdade. Tudo é calculado por pixel, então continua nítido em tela retina e no zoom do mergulho.
+- **Íris** (`iris()`): feixes e fibras claras (trabéculas) que saem da pupila ondulando de leve, com relevo iluminado pela luz principal; colarete irregular em zigue-zague, zona da pupila mais clara e quente, criptas de Fuchs em forma de lente com borda clara, sulcos de contração na periferia, sardinhas de pigmento, anel limbal esfumado e franja escura em volta da pupila. A íris é côncava e recebe a sombra da pálpebra e a cáustica da córnea (luz concentrada no lado oposto à fonte). Fios cada vez mais finos aparecem conforme a câmera se aproxima.
+- **Córnea e reflexos:** o reflexo de um ring light (de quem grava), uma janela suave e um pontinho de rebote, que ficam do lado da luz e não giram com o olho. No mergulho, a córnea sai de foco e o reflexo fica macio.
 - **Delineado Cleópatra** (`liner()`): fino no canto interno, grosso no externo e com um gatinho longo e afiado; embaixo, uma linha que sai do canto paralela ao gatinho, sem fechar com ele; e uma ponta no canto interno apontando para o nariz. Tudo preso às pálpebras: ao piscar, o traço desce junto e a ponta do gatinho fica parada.
-- **Maquiagem leve** (`skin()`): sombra esfumada na pálpebra móvel (mais intensa no canto externo), ponto de luz dourado no centro da pálpebra e no canto interno, glitter de estrelinhas ✦ e um blush suave. Ao fechar o olho, a pálpebra estica e leva a sombra junto.
-- **Cílios** (`lashes()`): 12 grandes e 11 menores em cima, desenhados fio a fio como curvas que afinam na ponta, e 6 curtinhos embaixo. Ao piscar, os de cima giram com a pálpebra e apontam para baixo.
-- **Olho completo** (`shade()`): pele em faixas de luz, vinco desenhado, sobrancelha cheia com fios no começo, esclera creme com a sombra da pálpebra, carúncula rosada e linha d'água com brilho.
+- **Delineado de verdade:** kohl na linha d'água (como no delineado egípcio, mais forte no canto externo), linha de baixo com borda de lápis, esfumado marrom bem leve em volta e acabamento acetinado que brilha com a mesma luz da pele.
+- **Maquiagem leve** (`skin()`): sombra esfumada, clara na pálpebra e mais funda no vinco e no canto externo, com brilho acetinado e cintilância fina que pisca devagar; iluminador no canto interno e logo abaixo da sobrancelha. Ao fechar o olho, a pálpebra estica e leva a sombra junto.
+- **Cílios** (`lashes()`): 24 tufos compridos e 23 menores em cima, cada tufo com fios que nascem juntos e se abrem até as pontas, e 14 curtinhos embaixo. Fios mais finos que um pixel ficam transparentes em vez de serrilhar. Ao piscar, os de cima giram com a pálpebra e apontam para baixo.
+- **Pele com profundidade** (`skinH()` e `skin()`): relevo do osso da sobrancelha, da órbita, da pálpebra abaulada sobre o globo, do vinco e da olheira, iluminado em 3D com luz difusa macia, um toque de subsurface (o tom quente da pele translúcida), oclusão nas dobras e brilho úmido. De perto aparecem poros e linhas finas.
+- **Globo ocular** (`ball()`): esfera iluminada (o branco do olho nunca é branco chapado), vasinhos discretos nos cantos, carúncula úmida, linha d'água rosada com o menisco de lágrima brilhando, sombra larga da pálpebra e dos cílios e a dobra funda do canto externo.
+- **Sobrancelha** (`brow()`): base macia com fios por cima, na direção natural dos pelos.
 - **Câmera:** o olho abre desfocado e a lente "puxa o foco", com um quadrado de autofoco na pupila. Clicar ou tocar no olho dispara o autofoco ali.
 - **Vivo:** segue o mouse e o dedo a partir de onde o olho está na tela; pisca a cada 2 a 6 s (às vezes duas vezes), achatando um pouco no meio da piscada; a pupila dilata quando o ponteiro chega perto ou passa nos botões; semicerra quando o mouse passa rápido; sem ninguém mexer, olha em volta com saltos e pausas e, depois de uns 16 s, fica com sono e acorda assustado.
 - **Clique ou toque:** alterna entre susto (aperta, arregala passando do ponto e volta balançando) e piscadinha.
@@ -217,7 +221,7 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 - **Economia de dados:** com o modo "economia de dados" do celular ativo, os vídeos não tocam sozinhos.
 - **Canvas adaptativo:** o WebGL limita a densidade de pixels, reduz a resolução sozinho se o aparelho não acompanhar e pausa quando sai da tela ou a aba fica oculta.
 - **Imagens responsivas** em WebP, com JPG de reserva.
-- **Plano B:** sem WebGL, entra um olho feito em CSS (`.fb-eye`), no mesmo estilo cartoon (delineado com gatinho e brilhos), com o mesmo mergulho.
+- **Plano B:** sem WebGL, entra um olho feito em CSS (`.fb-eye`), no mesmo estilo (delineado com gatinho, íris em fibras e o reflexo do ring light), com o mesmo mergulho.
 
 ## Acessibilidade
 
