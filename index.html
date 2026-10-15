@@ -120,7 +120,7 @@
         <canvas class="hero__canvas" data-cursor="focus" aria-hidden="true"></canvas>
         <div class="af" aria-hidden="true"><i></i></div>
         <div class="hero__fallback" aria-hidden="true">
-          <div class="fb-eye"><div class="fb-iris"><div class="fb-pupil"></div></div></div>
+          <div class="fb-eye"><div class="fb-ball"><div class="fb-iris"><div class="fb-pupil"></div></div></div><i class="fb-wing"></i></div>
         </div>
         <div class="hero__shade" aria-hidden="true"></div>
 
@@ -154,6 +154,23 @@
           </p>
         </div>
         <div class="hero__scroll" aria-hidden="true"><span>Role para entrar</span><i></i></div>
+
+        <!-- painel para brincar com o olho (só aparece com WebGL; as amostras vêm do EYE_STYLE no main.js) -->
+        <div class="eye-kit" data-eye-kit hidden>
+          <button class="eye-kit__toggle" type="button" aria-expanded="false" aria-controls="eye-kit-panel">
+            <span aria-hidden="true">✦</span> Brinque com o olhar
+          </button>
+          <div class="eye-kit__panel" id="eye-kit-panel" role="group" aria-label="Personalizar o olho" hidden>
+            <p class="eye-kit__title" id="eye-kit-iris">Íris</p>
+            <div class="eye-kit__row" data-kit="iris" role="group" aria-labelledby="eye-kit-iris"></div>
+            <p class="eye-kit__title" id="eye-kit-shadow">Sombra</p>
+            <div class="eye-kit__row" data-kit="shadow" role="group" aria-labelledby="eye-kit-shadow"></div>
+            <button class="eye-kit__switch" type="button" role="switch" aria-checked="true" data-kit="makeup">
+              <span>Maquiagem</span><i aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
         <div class="hero__dark" aria-hidden="true"></div>
         <div class="viewfinder" aria-hidden="true">
           <span class="vf__c vf__c--tl"></span><span class="vf__c vf__c--tr"></span>
