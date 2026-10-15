@@ -40,11 +40,12 @@ Landing page da **Ingrid Lima**, vídeomaker mobile, social media e gestora de t
 
 Site de página única, estático e sem etapa de build, feito para apresentar o trabalho da Ingrid e transformar visitantes em contatos no WhatsApp.
 
-O destaque é o **hero**: um olho castanho realista, desenhado inteiramente por código em WebGL, ocupa o fundo da página. Conforme a pessoa rola, a câmera mergulha na íris até entrar na pupila, onde a escuridão vira o visor de uma câmera gravando. A narrativa visual conecta o olhar da Ingrid ao feed do cliente.
+O destaque é o **hero**: um olho cartoon castanho, com maquiagem leve e delineado estilo Cleópatra, desenhado inteiramente por código em WebGL, ocupa o fundo da página. Ele segue o mouse (ou o dedo), pisca, reage ao clique e até fica com sono. Conforme a pessoa rola, a câmera mergulha na íris até entrar na pupila, onde a escuridão vira o visor de uma câmera gravando. A narrativa visual conecta o olhar da Ingrid ao feed do cliente.
 
 ## Destaques
 
-- 👁️ **Olho fotorrealista em WebGL**: nenhuma imagem, só shader. Fica nítido em qualquer tela e em qualquer zoom.
+- 👁️ **Olho cartoon em WebGL**: nenhuma imagem, só shader, com traço vetorial nítido em qualquer tela e em qualquer zoom. Delineado Cleópatra, sombra esfumada com glitter ✦ e cílios desenhados fio a fio.
+- ✨ **Interativo**: segue o mouse e o dedo, pisca sozinho, arregala ou dá uma piscadinha no clique, semicerra com o mouse rápido, olha em volta quando ninguém mexe e cochila depois de um tempo. O painel **"✦ Brinque com o olhar"** troca a cor da íris e da sombra e liga/desliga a maquiagem.
 - 🎬 **Mergulho guiado pela rolagem**, com três momentos de texto e um visor de câmera (REC, cronômetro e foco) dentro da pupila.
 - 📱 **Portfólio em vídeo vertical**: 9 vídeos que tocam sem som ao aparecer na tela, com player em tela cheia para assistir com som.
 - 💬 **Formulário que vira mensagem no WhatsApp**, com validação e envio opcional para planilha ou CRM.
@@ -177,8 +178,11 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 
 | O que mudar | Onde |
 | --- | --- |
-| Cores da íris | `cDark`, `cBrown`, `cAmber` e `cGold`, dentro de `iris()` |
-| Tom da pele | Primeira linha `vec3 skin=...`, em `shade()` |
+| Cores da íris e da sombra, maquiagem inicial | Objeto `EYE_STYLE`, no começo da seção do olho no `main.js`. O painel ✦ é montado a partir dele |
+| Esconder o painel "✦ Brinque com o olhar" | `EYE_STYLE.kit = false` |
+| Tom da pele, traço, delineado, sobrancelha e esclera | Constantes `SKIN`, `SKIN_SH`, `SKIN_HI`, `INK`, `LINER`, `BROW` e `SCLERA`, no topo do `EYE_FRAG` |
+| Ponta do gatinho | `WING` (posição) e `thUp()` (espessura do traço de cima) |
+| Tamanho da íris e quanto ela anda | `IRIS_R` e `LOOK` |
 | Posição e tamanho | Método `layout()` da classe `Eye` |
 | Ritmo do mergulho | Função `heroScroll()`. O zoom usa o tamanho da íris na tela (`zoomFor`), então funciona igual no celular e no desktop |
 | Duração do mergulho | `.hero { height: 300svh }` no `style.css` (`220svh` no celular) |
@@ -187,13 +191,16 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 <details>
 <summary><strong>Todos os detalhes do olho</strong></summary>
 
-- **Íris castanha fotorrealista** (`iris()`): fibras, filamentos dourados, colarete em zigue-zague, criptas, sulcos de contração, anel limbal e pupila de borda nítida. Os detalhes se multiplicam conforme a câmera se aproxima (nível de detalhe contínuo).
-- **Olhar feminino e delicado:** formato amendoado com o canto externo erguido, cílios longos e curvados com efeito de rímel, sobrancelha fina e arqueada fio a fio, sombra rosé-dourada e iluminador no osso da sobrancelha.
-- **Delineado:** nasce quase invisível no canto interno, engrossa no terço externo e termina num gatinho afilado, com acabamento acetinado e esfumado marrom suave.
-- **Olho completo** (`shade()`): pele com relevo 3D e subsurface; cílios em tufos (3 camadas em cima, 2 embaixo) com sombra projetada; esclera com veias finas e carúncula; linha d'água úmida; cáustica de luz na íris e o reflexo de uma janela na córnea.
+- **Estilo cartoon:** formas limpas, contornos de espessura variável e sombreamento em faixas (cel shading). Tudo é calculado como forma vetorial, então o traço continua nítido em tela retina e no zoom do mergulho.
+- **Íris** (`iris()`): topo escuro, meia-lua clara embaixo, colarete dourado em zigue-zague, raios claros e escuros, pintinhas douradas, anel escuro na borda e pupila de borda nítida. Novas camadas de raios aparecem conforme a câmera se aproxima.
+- **Brilhos:** um oval grande e um pontinho do lado oposto, que ficam do lado da luz e não giram com o olho, e uma estrelinha ✦ que cintila de vez em quando.
+- **Delineado Cleópatra** (`liner()`): fino no canto interno, grosso no externo e com um gatinho longo e afiado; embaixo, uma linha que sai do canto paralela ao gatinho, sem fechar com ele; e uma ponta no canto interno apontando para o nariz. Tudo preso às pálpebras: ao piscar, o traço desce junto e a ponta do gatinho fica parada.
+- **Maquiagem leve** (`skin()`): sombra esfumada na pálpebra móvel (mais intensa no canto externo), ponto de luz dourado no centro da pálpebra e no canto interno, glitter de estrelinhas ✦ e um blush suave. Ao fechar o olho, a pálpebra estica e leva a sombra junto.
+- **Cílios** (`lashes()`): 12 grandes e 11 menores em cima, desenhados fio a fio como curvas que afinam na ponta, e 6 curtinhos embaixo. Ao piscar, os de cima giram com a pálpebra e apontam para baixo.
+- **Olho completo** (`shade()`): pele em faixas de luz, vinco desenhado, sobrancelha cheia com fios no começo, esclera creme com a sombra da pálpebra, carúncula rosada e linha d'água com brilho.
 - **Câmera:** o olho abre desfocado e a lente "puxa o foco", com um quadrado de autofoco na pupila. Clicar ou tocar no olho dispara o autofoco ali.
-- **Lente macro** (pós-processamento): o foco fica no olho e a pele ao redor desfoca com a distância.
-- **Vivo:** pisca de forma natural, faz microssacadas, segue o mouse (no celular, olha em volta sozinho) e a pupila dilata quando o mouse passa nos botões.
+- **Vivo:** segue o mouse e o dedo a partir de onde o olho está na tela; pisca a cada 2 a 6 s (às vezes duas vezes), achatando um pouco no meio da piscada; a pupila dilata quando o ponteiro chega perto ou passa nos botões; semicerra quando o mouse passa rápido; sem ninguém mexer, olha em volta com saltos e pausas e, depois de uns 16 s, fica com sono e acorda assustado.
+- **Clique ou toque:** alterna entre susto (aperta, arregala passando do ponto e volta balançando) e piscadinha.
 - **Desfoque de movimento** acompanha a velocidade da rolagem: quando a pessoa para, a íris fica nítida.
 
 **Roteiro do mergulho** (`.hero__story` e `.viewfinder` no `index.html`):
@@ -210,7 +217,7 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 - **Economia de dados:** com o modo "economia de dados" do celular ativo, os vídeos não tocam sozinhos.
 - **Canvas adaptativo:** o WebGL limita a densidade de pixels, reduz a resolução sozinho se o aparelho não acompanhar e pausa quando sai da tela ou a aba fica oculta.
 - **Imagens responsivas** em WebP, com JPG de reserva.
-- **Plano B:** sem WebGL, entra um olho feito em CSS (`.fb-eye`) com o mesmo mergulho.
+- **Plano B:** sem WebGL, entra um olho feito em CSS (`.fb-eye`), no mesmo estilo cartoon (delineado com gatinho e brilhos), com o mesmo mergulho.
 
 ## Acessibilidade
 
@@ -219,7 +226,8 @@ O olho é um shader WebGL (`EYE_FRAG` no `main.js`). Os principais pontos de aju
 - Menu e player navegáveis por teclado: `Esc` fecha e as setas `←` `→` trocam o vídeo.
 - Formulário com mensagens de erro ligadas a cada campo (`aria-describedby`).
 - Contraste AA.
-- Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave.
+- Com `prefers-reduced-motion`, o hero fica estático, sem zoom e sem rolagem suave. O painel ✦ continua funcionando, com as trocas instantâneas.
+- Painel ✦ navegável por teclado: botões com `aria-pressed`, interruptor com `role="switch"` e `Esc` fecha.
 - Testado em 375 px (celular), 961 px e 1440 px, sem rolagem horizontal e sem erros no console.
 
 ## SEO e compartilhamento
