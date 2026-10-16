@@ -4,7 +4,7 @@
 
 Landing page da **Ingrid Lima**, vídeomaker mobile, social media e gestora de tráfego pago ([@ingridlimadomkt](https://www.instagram.com/ingridlimadomkt/)).
 
-[![Site no ar](https://img.shields.io/badge/site-no%20ar-4f6bff?style=flat-square)](https://carlosserra-a11y.github.io/ingrid-market/)
+[![Site no ar](https://img.shields.io/badge/site-no%20ar-4f6bff?style=flat-square)](https://ingridlimamkt.netlify.app/)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -12,7 +12,9 @@ Landing page da **Ingrid Lima**, vídeomaker mobile, social media e gestora de t
 ![GSAP](https://img.shields.io/badge/GSAP-3.13-88CE02?style=flat-square&logo=greensock&logoColor=white)
 ![Sem build](https://img.shields.io/badge/build-nenhum-555?style=flat-square)
 
-**🔗 Acesse:** https://carlosserra-a11y.github.io/ingrid-market/
+**🔗 Acesse:** https://ingridlimamkt.netlify.app/
+
+> Também há uma cópia no GitHub Pages: https://carlosserra-a11y.github.io/ingrid-market/
 
 ![Prévia do site](assets/img/og.jpg)
 
@@ -63,7 +65,7 @@ O destaque é o **hero**: um olho castanho extremamente realista, com maquiagem 
 | Animações | [GSAP 3.13.0](https://gsap.com/) + ScrollTrigger 3.13.0 |
 | Rolagem suave | [Lenis 1.3.4](https://lenis.darkroom.engineering/) |
 | Fontes | Syne (títulos), Instrument Serif itálico (destaques) e Manrope (texto), via Google Fonts |
-| Hospedagem | GitHub Pages |
+| Hospedagem | Netlify (e GitHub Pages como cópia) |
 
 As bibliotecas vêm de CDN (jsDelivr) com **versão fixa e Subresource Integrity** (`integrity="sha384-…"`), então o navegador recusa qualquer arquivo alterado.
 
@@ -112,11 +114,15 @@ Depois abra `http://localhost:5173`.
 
 ## Publicação
 
-O site é publicado no **GitHub Pages** e atualiza sozinho a cada push na branch `main`.
+O site principal fica na **Netlify**, em https://ingridlimamkt.netlify.app/. Como é estático e não tem etapa de build, a publicação usa só os arquivos da raiz do repositório.
 
-Por ser estático, também funciona em Vercel, Netlify, Hostinger ou qualquer hospedagem de arquivos: basta apontar para a raiz do repositório.
+Para a Netlify atualizar sozinha a cada merge na `main`, ligue o site ao GitHub: **Project configuration → Build & deploy → Continuous deployment → Link repository**, escolha `carlosserra-a11y/ingrid-market`, branch `main`, deixe o **comando de build vazio** e o **diretório de publicação como `.`**.
 
-Se mudar de domínio, atualize `og:url` e `og:image` no `index.html` com o novo endereço, para a prévia aparecer certinho no WhatsApp e no Instagram.
+O **GitHub Pages** continua publicando uma cópia a cada push na `main`, em https://carlosserra-a11y.github.io/ingrid-market/.
+
+Por ser estático, também funciona em Vercel, Hostinger ou qualquer hospedagem de arquivos: basta apontar para a raiz do repositório.
+
+Se mudar de domínio, atualize `og:url` e `og:image` no `index.html` com o novo endereço, para a prévia aparecer certinho no WhatsApp e no Instagram. Hoje essas duas tags ainda apontam para o endereço do GitHub Pages.
 
 ## Como editar
 
